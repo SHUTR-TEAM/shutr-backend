@@ -1,4 +1,7 @@
 from pathlib import Path
+from mongoengine import connect
+import os
+from dotenv import load_dotenv
 
 load_dotenv() # Load .env file
 
@@ -62,6 +65,17 @@ DATABASES = {
 }
 
 
+# MongoDB Configuration
+MONGO_USERNAME = os.getenv('MONGO_USERNAME')
+MONGO_PASSWORD = os.getenv('MONGO_PASSWORD')
+MONGO_DB_NAME = os.getenv('MONGO_DB_NAME')
+MONGO_CLUSTER_URL = os.getenv('MONGO_CLUSTER_URL')
+MONGO_CLUSTER_NAME = os.getenv('MONGO_CLUSTER_NAME')
+
+MONGO_URI = f"mongodb+srv://{MONGO_USERNAME}:{MONGO_PASSWORD}@{MONGO_CLUSTER_URL}/{MONGO_DB_NAME}?retryWrites=true&w=majority&appName={MONGO_CLUSTER_NAME}"
+
+# Establish Connection
+connect(MONGO_DB_NAME, host=MONGO_URI)
 
 # Password validation
 # https://docs.djangoproject.com/en/5.1/ref/settings/#auth-password-validators
