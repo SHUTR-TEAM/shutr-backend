@@ -14,7 +14,7 @@
 ### Mac and Linux:
 
     source venv/bin/activate
-    
+
 ### Windows:
 
     venv\Scripts\activate
@@ -34,3 +34,4 @@
 ## Run Server
 
     python manage.py runserver
+    daphne shutr_backend.asgi:application
