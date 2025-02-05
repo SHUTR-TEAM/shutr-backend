@@ -1,7 +1,8 @@
-from pathlib import Path
+from motor.motor_asyncio import AsyncIOMotorClient
 from mongoengine import connect
-import os
 from dotenv import load_dotenv
+from pathlib import Path
+import os
 
 load_dotenv() # Load .env file
 
@@ -18,13 +19,17 @@ ALLOWED_HOSTS = []
 
 # Application definition
 INSTALLED_APPS = [
+    'daphne',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'channels',
+    'rest_framework',
     'core',
+    'chat',
 ]
 
 MIDDLEWARE = [
@@ -57,6 +62,16 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'shutr_backend.wsgi.application'
 
+# Redis as the channel layer
+CHANNEL_LAYERS = {
+    'default': {
+        'BACKEND': 'channels_redis.core.RedisChannelLayer',
+        'CONFIG': {
+            "hosts": [('127.0.0.1', 6379)],  # Redis server
+        },
+    },
+}
+
 # Dummy db for Django
 DATABASES = {
     'default': {
@@ -74,8 +89,11 @@ MONGO_CLUSTER_NAME = os.getenv('MONGO_CLUSTER_NAME')
 
 MONGO_URI = f"mongodb+srv://{MONGO_USERNAME}:{MONGO_PASSWORD}@{MONGO_CLUSTER_URL}/{MONGO_DB_NAME}?retryWrites=true&w=majority&appName={MONGO_CLUSTER_NAME}"
 
+client = AsyncIOMotorClient(MONGO_URI)
+db = client[MONGO_DB_NAME]
+
 # Establish Connection
-connect(MONGO_DB_NAME, host=MONGO_URI)
+connect(db.name, host=MONGO_URI)
 
 # Password validation
 # https://docs.djangoproject.com/en/5.1/ref/settings/#auth-password-validators
