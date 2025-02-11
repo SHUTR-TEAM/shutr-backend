@@ -1,20 +1,15 @@
-from django.db import models
-from django.contrib.auth.models import User
 
-# Create your models here. 
+from mongoengine import Document, StringField, DateTimeField
+import datetime
 
-def upload_to(instance, filename):
-    return f'profiles/{instance.user.id}/{filename}'
-
-class UserProfile(models.Model):
-    user = models.OneToOneField(User, on_delete=models.CASCADE)
-    profile_picture = models.ImageField(upload_to=upload_to, blank=True, null=True)
-    background_image = models.ImageField(upload_to=upload_to, blank=True, null=True)
-
-    def __str__(self):
-        return self.user.username
-
-
+class Header(Document):
+    name = StringField(max_length=41)
+    Background_image_url = StringField(max_length=255, required=False)
+    profile_image_url = StringField(max_length=255, required=False)
+    created_at = DateTimeField(default=lambda: datetime.datetime.utcnow())  # Auto set current time
+    updated_at = DateTimeField(default=lambda: datetime.datetime.utcnow())  # Set manually on updates
+    
+  
 
 
 
