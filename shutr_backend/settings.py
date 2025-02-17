@@ -1,7 +1,8 @@
-from pathlib import Path
+from motor.motor_asyncio import AsyncIOMotorClient
 from mongoengine import connect
-import os
 from dotenv import load_dotenv
+from pathlib import Path
+import os
 
 load_dotenv() # Load .env file
 
@@ -13,21 +14,28 @@ SECRET_KEY = 'django-insecure-u14%zfuh!(@^fj(bc0e@7n*hi&9yvf!h7nl(8(ahl()1^&6t^1
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = [
+    "shutr-backend-production.up.railway.app",
+    "localhost",
+    "127.0.0.1"
+]
 
 
 # Application definition
 INSTALLED_APPS = [
     'corsheaders',
-
+    'daphne',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'channels',
+    'rest_framework',
     'core',
     'portfolio',
+    'chat',
 ]
 
 MIDDLEWARE = [
@@ -70,6 +78,16 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'shutr_backend.wsgi.application'
 
+# Redis as the channel layer
+CHANNEL_LAYERS = {
+    'default': {
+        'BACKEND': 'channels_redis.core.RedisChannelLayer',
+        'CONFIG': {
+            "hosts": [('127.0.0.1', 6379)],  # Redis server
+        },
+    },
+}
+
 # Dummy db for Django
 
 DATABASES = {
@@ -87,6 +105,9 @@ MONGO_CLUSTER_URL = os.getenv('MONGO_CLUSTER_URL')
 MONGO_CLUSTER_NAME = os.getenv('MONGO_CLUSTER_NAME')
 
 MONGO_URI = f"mongodb+srv://{MONGO_USERNAME}:{MONGO_PASSWORD}@{MONGO_CLUSTER_URL}/{MONGO_DB_NAME}?retryWrites=true&w=majority&appName={MONGO_CLUSTER_NAME}"
+
+# client = AsyncIOMotorClient(MONGO_URI)
+# db = client[MONGO_DB_NAME]
 
 # Establish Connection
 connect(MONGO_DB_NAME, host=MONGO_URI)
