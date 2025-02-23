@@ -3,8 +3,8 @@ from django.views.decorators.csrf import csrf_exempt
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from rest_framework import status
-from .serializers import HeaderSerializer, GallerySerializer
-from .models import Header, Gallery
+from .serializers import HeaderSerializer, GallerySerializer, ReviewSerializer
+from .models import Header, Gallery, Review
 from bson import ObjectId
 from core.pagination import PaginationWithParams
 
@@ -145,6 +145,79 @@ def gallery_delete_by_id(gallery_id):
         gallery.delete()
         return Response({"message": "gallery deleted successfully"}, status=status.HTTP_200_OK)
     except Gallery.DoesNotExist:
-        return Response({"error": "Header not found"}, status=status.HTTP_404_NOT_FOUND)    
+        return Response({"error": "Gallery not found"}, status=status.HTTP_404_NOT_FOUND)    
     
     
+
+
+
+
+
+
+
+# Create a new review
+# POST /api/reviews/create
+@api_view(['POST'])
+@csrf_exempt
+def review_create(request):
+    serializer = ReviewSerializer(data=request.data)
+    if serializer.is_valid():
+
+        review = serializer.save()
+
+        return Response({"message": "review created", "review_id": str(review.id)}, status=status.HTTP_201_CREATED)
+    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+# Find all reviews
+# GET /api/review
+@api_view(['GET'])
+@csrf_exempt
+def review_find_all(request):
+    paginator = PaginationWithParams()
+    reviews = Review.objects.all()
+    paginated_reviews = paginator.paginate_queryset(reviews, request)
+    serializer = ReviewSerializer(paginated_reviews, many=True)
+    return paginator.get_paginated_response(serializer.data)
+
+
+# Find a review by ID
+# GET /api/reviews/:review_id
+@api_view(['GET'])
+@csrf_exempt
+def review_find_by_id(request, review_id):
+    try:
+        review = Review.objects.get(id=ObjectId(review_id))
+        serializer = ReviewSerializer(review)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+    except Review.DoesNotExist:
+        return Response({"error": "Review not found"}, status=status.HTTP_404_NOT_FOUND)
+
+
+# Update a review by ID
+# POST /api/reviews/:review_id/update
+@api_view(['POST'])
+@csrf_exempt
+def review_update_by_id(request, review_id):
+    try:
+        review = Review.objects.get(id=ObjectId(review_id))
+        serializer = ReviewSerializer(review, data=request.data, partial=True)
+        if serializer.is_valid():
+            review = serializer.save()
+            return Response({"message": "review updated successfully"}, status=status.HTTP_200_OK)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    except Review.DoesNotExist:
+        return Response({"error": "Review not found"}, status=status.HTTP_404_NOT_FOUND)        
+
+
+# Delete a review by ID
+# POST /api/reviews/:review_id/delete
+@api_view(['GET'])
+@csrf_exempt
+def review_delete_by_id(request, review_id):
+    try:
+        review = Review.objects.get(id=ObjectId(review_id))
+        review.delete()
+        return Response({"message": "review deleted successfully"}, status=status.HTTP_200_OK)
+    except Review.DoesNotExist:
+        return Response({"error": "Review not found"}, status=status.HTTP_404_NOT_FOUND)       

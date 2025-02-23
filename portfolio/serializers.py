@@ -1,6 +1,6 @@
 from rest_framework import serializers
 from bson import ObjectId
-from .models import Header, Gallery  # Import your MongoEngine model
+from .models import Header, Gallery, Review, ReviewFormat  # Import your MongoEngine model
 import datetime
 
 class ObjectIdField(serializers.Field):
@@ -61,3 +61,56 @@ class GallerySerializer(serializers.Serializer):
             #instance.updated_at = datetime.datetime.utcnow()
             instance.save()
             return instance
+
+
+# class ReviewSerializer(serializers.Serializer):      
+#      id = ObjectIdField(read_only=True)  
+#      name = serializers.CharField(max_length=41)
+#      rating = serializers.FloatField(min_value=0.0, max_value=10.0)
+#      reviewText = serializers.CharField(max_length=1000)
+#      profile_image_url = serializers.CharField(max_length=255)
+
+
+#      def create(self, validated_data):
+#         """Create and return a new review instance."""
+#         return Review(**validated_data).save()
+
+#      def update(self, instance, validated_data):
+#             """Update and return an existing review instance."""
+#             for key, value in validated_data.items():
+#                 setattr(instance, key, value)
+#             #instance.updated_at = datetime.datetime.utcnow()
+#             instance.save()
+#             return instance
+
+
+class ReviewFormatSerializer(serializers.Serializer):
+    name = serializers.CharField(max_length=41)
+    rating = serializers.FloatField(min_value=0.0, max_value=10.0)
+    reviewText = serializers.CharField(max_length=1000)
+    profile_image_url = serializers.CharField(max_length=255)
+    address = serializers.CharField(max_length=35)
+
+
+class ReviewSerializer(serializers.Serializer):
+    id = ObjectIdField(read_only=True)
+    reviews = ReviewFormatSerializer(many=True)  # Nested serializer for multiple reviews
+
+    def create(self, validated_data):
+        """Create and return a new Review instance."""
+        reviews_data = validated_data.pop('reviews', [])
+        review_instances = [ReviewFormat(**review) for review in reviews_data]
+        return Review(reviews=review_instances).save()
+
+    def update(self, instance, validated_data):
+        """Update and return an existing Review instance."""
+        if "reviews" in validated_data:
+            reviews_data = validated_data.pop("reviews")
+            instance.reviews = [ReviewFormat(**review) for review in reviews_data]
+        
+        for key, value in validated_data.items():
+            setattr(instance, key, value)
+        
+        instance.save()
+        return instance
+
