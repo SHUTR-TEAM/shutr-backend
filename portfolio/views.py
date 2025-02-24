@@ -139,7 +139,7 @@ def gallery_update_by_id(request, gallery_id):
 # POST /api/galleries/:gallery_id/delete
 @api_view(['GET'])
 @csrf_exempt
-def gallery_delete_by_id(gallery_id):
+def gallery_delete_by_id(request, gallery_id):
     try:
         gallery = Gallery.objects.get(id=ObjectId(gallery_id))
         gallery.delete()

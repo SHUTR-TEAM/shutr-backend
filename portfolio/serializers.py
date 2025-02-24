@@ -1,6 +1,6 @@
 from rest_framework import serializers
 from bson import ObjectId
-from .models import Header, Gallery, Review, ReviewFormat  # Import your MongoEngine model
+from .models import Header, Gallery, Review, ReviewFormat, GalleryFormat  # Import your MongoEngine model
 import datetime
 
 class ObjectIdField(serializers.Field):
@@ -44,23 +44,52 @@ class HeaderSerializer(serializers.Serializer):
 
 
 
-class GallerySerializer(serializers.Serializer):
-       """Custom serializer for the Gallery model."""
+# class GallerySerializer(serializers.Serializer):
+#        """Custom serializer for the Gallery model."""
       
-       id = ObjectIdField(read_only=True)
-       photo_collection = serializers.ListField(child=serializers.URLField())
+#        id = ObjectIdField(read_only=True)
+#        photo_collection = serializers.ListField(child=serializers.URLField())
 
-       def create(self, validated_data):
-        """Create and return a new gallery instance."""
-        return Gallery(**validated_data).save()
+#        def create(self, validated_data):
+#         """Create and return a new gallery instance."""
+#         return Gallery(**validated_data).save()
 
-       def update(self, instance, validated_data):
-            """Update and return an existing gallery instance."""
-            for key, value in validated_data.items():
-                setattr(instance, key, value)
-            #instance.updated_at = datetime.datetime.utcnow()
-            instance.save()
-            return instance
+#        def update(self, instance, validated_data):
+#             """Update and return an existing gallery instance."""
+#             for key, value in validated_data.items():
+#                 setattr(instance, key, value)
+#             #instance.updated_at = datetime.datetime.utcnow()
+#             instance.save()
+#             return instance
+
+
+class GalleryFormatSerializer(serializers.Serializer):
+    url = serializers.URLField()
+    catagory = serializers.CharField(max_length=20)
+
+
+class GallerySerializer(serializers.Serializer):
+    id = ObjectIdField(read_only=True)
+    Gallery = GalleryFormatSerializer(many=True)  # Nested serializer for multiple reviews
+
+
+    def create(self, validated_data):
+        """Create and return a new Gallery instance."""
+        gallery_data = validated_data.pop('Gallery', [])
+        gallery_instances = [GalleryFormat(**gallery) for gallery in gallery_data]
+        return Gallery(Gallery=gallery_instances).save()
+
+    def update(self, instance, validated_data):
+        """Update and return an existing Gallery instance."""
+        if "Gallery" in validated_data:
+            gallery_data = validated_data.pop("Gallery")
+            instance.Gallery = [GalleryFormat(**gallery) for gallery in gallery_data]
+        
+        for key, value in validated_data.items():
+            setattr(instance, key, value)
+        
+        instance.save()
+        return instance
 
 
 # class ReviewSerializer(serializers.Serializer):      

@@ -15,9 +15,18 @@ class Header(Document):
 
     #photo_collection = ReferenceField(Gallery, required=False)
 
+
+class GalleryFormat(EmbeddedDocument):
+    url = URLField()
+    catagory = StringField(max_length = 20)
+
 class Gallery(Document):
-    photo_collection = ListField(URLField())
-    #id = ReferenceField(Header, required=False)    
+    Gallery = ListField(EmbeddedDocumentField(GalleryFormat))
+       
+
+# class Gallery(Document):
+#     photo_collection = ListField(URLField())
+#     #id = ReferenceField(Header, required=False)    
 
 
 class ReviewFormat(EmbeddedDocument):
