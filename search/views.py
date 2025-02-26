@@ -19,9 +19,9 @@ def get_users(request):
 
          # If search term is empty, return all users
         if not search_term:
-            products = list(USER_COLLECTION.find({}, {"_id": 0, "name": 1, "price": 1,"description":1, "tags": 1, "location": 1, "reviews": 1, "rating": 1, "images": 1}))
-            print(f"Returning {len(products)} users")  # Debugging print
-            return Response(products, status=200)
+            portfolios = list(USER_COLLECTION.find({}, {"_id": 0, "name": 1, "price": 1,"description":1, "tags": 1, "location": 1, "reviews": 1, "rating": 1, "images": 1}))
+            print(f"Returning {len(portfolios)} users")  # Debugging print
+            return Response(portfolios, status=200)
 
         # Search query (case-insensitive match for name, tags, location)
         filter_query = {
@@ -32,10 +32,22 @@ def get_users(request):
             ]
         }
 
-        products = list(USER_COLLECTION.find(filter_query, {"_id": 0, "name": 1, "price": 1,"description":1, "tags": 1, "location": 1, "reviews": 1, "rating": 1, "images": 1}))
+        portfolios = list(USER_COLLECTION.find(filter_query, {"_id": 0, "name": 1, "price": 1,"description":1, "tags": 1, "location": 1, "reviews": 1, "rating": 1, "images": 1}))
         
-        return Response(products, status=200)
+        return Response(portfolios, status=200)
     except Exception as e:
         print("Error:", e)
         return Response({"error": "Internal Server Error"}, status=500)
+
+###############################
+@api_view(['POST'])
+def get_users_default(request):
+    try:        
+
+        portfolios = list(USER_COLLECTION.find({}, {"_id": 0, "name": 1, "description":1,"price": 1, "tags": 1, "location": 1, "reviews": 1, "rating": 1, "images": 1}))
+        
+        return Response(portfolios, status=200)
     
+    except Exception as e:
+        print("Error:-", e)
+        return Response({"error": "Internal Server Error"}, status=500)
