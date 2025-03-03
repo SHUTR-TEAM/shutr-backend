@@ -155,6 +155,25 @@ STATIC_URL = 'static/'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
+# # AWS S3 Configuration
+# AWS_ACCESS_KEY_ID = 'your-aws-access-key-id'
+# AWS_SECRET_ACCESS_KEY = 'your-aws-secret-access-key'
+# AWS_STORAGE_BUCKET_NAME = 'your-bucket-name'
+# AWS_S3_REGION_NAME = 'your-region'  # e.g. 'us-east-1'
+
+
+
+# # Use S3 for storing static files
+# DEFAULT_FILE_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'
+
+# # Optional: Configure the base URL to use for the S3 files
+# AWS_S3_CUSTOM_DOMAIN = f"{AWS_STORAGE_BUCKET_NAME}.s3.amazonaws.com"
+
+
+
+MEDIA_URL = '/media/'
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:3000",  # Allow frontend requests
 ]

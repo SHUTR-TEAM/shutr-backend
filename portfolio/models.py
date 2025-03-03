@@ -16,12 +16,22 @@ class Header(Document):
     #photo_collection = ReferenceField(Gallery, required=False)
 
 
+
 class GalleryFormat(EmbeddedDocument):
-    url = URLField()
-    catagory = StringField(max_length = 20)
+    url = StringField()  # Store file path instead of external URL
+    category = StringField(max_length=20)
 
 class Gallery(Document):
     Gallery = ListField(EmbeddedDocumentField(GalleryFormat))
+
+
+
+# class GalleryFormat(EmbeddedDocument):
+#     url = URLField()
+#     catagory = StringField(max_length = 20)
+
+# class Gallery(Document):
+#     Gallery = ListField(EmbeddedDocumentField(GalleryFormat))
        
 
 # class Gallery(Document):
@@ -49,12 +59,14 @@ class Review(Document):
 #     profile_image_url = StringField(max_length=255)
 
 
-class Package(models.Model):
-    title = models.CharField(max_length=255)
-    price = models.CharField(max_length=50)
-    description = models.TextField()
-    details = models.JSONField()  # Store details as an array
-    packageType = models.CharField(max_length=100)
+class Package(Document):
+    title = StringField(max_length=255, required=True)
+    price = StringField(max_length=50, required=True)
+    description = StringField(max_length=1000, required=True)
+    details = ListField(StringField(), required=True)  # List of package details
+    package_type = StringField(max_length=100, required=True)
+    created_at = DateTimeField(default=datetime.datetime.utcnow)  # Auto-set on creation
+    updated_at = DateTimeField(default=datetime.datetime.utcnow)  # Auto-set on update
 
     def __str__(self):
         return self.title

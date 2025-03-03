@@ -11,8 +11,11 @@ urlpatterns= [
 ]
 
 '''
-from django.urls import path
-from .views import get_packages
+
+from django.urls import path, include
+from rest_framework.routers import DefaultRouter
+from .views import PackageViewSet
+
 
 
 from .views import (
@@ -37,6 +40,11 @@ from .views import (
 
 )
 
+# Initialize the router and register the viewset
+router = DefaultRouter()
+router.register(r'packages', PackageViewSet, basename="package")
+
+
 urlpatterns = [
     path('headers', header_find_all),
     path('headers/create', header_create),
@@ -56,5 +64,6 @@ urlpatterns = [
     path('reviews/<str:review_id>/update', review_update_by_id),
     path('reviews/<str:review_id>/delete', review_delete_by_id),
 
+    path('', include(router.urls)),
     path('packages/', get_packages, name='get_packages'),
 ]
