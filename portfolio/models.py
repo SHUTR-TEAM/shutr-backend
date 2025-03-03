@@ -16,12 +16,22 @@ class Header(Document):
     #photo_collection = ReferenceField(Gallery, required=False)
 
 
+
 class GalleryFormat(EmbeddedDocument):
-    url = URLField()
-    catagory = StringField(max_length = 20)
+    url = StringField()  # Store file path instead of external URL
+    category = StringField(max_length=20)
 
 class Gallery(Document):
     Gallery = ListField(EmbeddedDocumentField(GalleryFormat))
+
+
+
+# class GalleryFormat(EmbeddedDocument):
+#     url = URLField()
+#     catagory = StringField(max_length = 20)
+
+# class Gallery(Document):
+#     Gallery = ListField(EmbeddedDocumentField(GalleryFormat))
        
 
 # class Gallery(Document):

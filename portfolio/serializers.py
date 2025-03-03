@@ -62,7 +62,7 @@ class HeaderSerializer(serializers.Serializer):
         return instance
 
 
-
+##
 # class GallerySerializer(serializers.Serializer):
 #        """Custom serializer for the Gallery model."""
       
@@ -80,17 +80,54 @@ class HeaderSerializer(serializers.Serializer):
 #             #instance.updated_at = datetime.datetime.utcnow()
 #             instance.save()
 #             return instance
+##
+
+# class GalleryFormatSerializer(serializers.Serializer):
+#     url = serializers.URLField()
+#     catagory = serializers.CharField(max_length=20)
+
+
+# class GallerySerializer(serializers.Serializer):
+#     id = ObjectIdField(read_only=True)
+#     Gallery = GalleryFormatSerializer(many=True)  # Nested serializer for multiple reviews
+
+
+#     def create(self, validated_data):
+#         """Create and return a new Gallery instance."""
+#         gallery_data = validated_data.pop('Gallery', [])
+#         gallery_instances = [GalleryFormat(**gallery) for gallery in gallery_data]
+#         return Gallery(Gallery=gallery_instances).save()
+##
+    # def update(self, instance, validated_data):
+    #     """Update and return an existing Gallery instance."""
+    #     if "Gallery" in validated_data:
+    #         gallery_data = validated_data.pop("Gallery")
+    #         instance.Gallery = [GalleryFormat(**gallery) for gallery in gallery_data]
+##      
+
+    # def update(self, instance, validated_data):
+    #     """Update and return an existing Gallery instance."""
+    #     if "Gallery" in validated_data:
+    #         gallery_data = validated_data.pop("Gallery")
+    #         # Append new images to the existing list instead of replacing
+    #         for gallery_item in gallery_data:
+    #             instance.Gallery.append(GalleryFormat(**gallery_item))
+
+    #     for key, value in validated_data.items():
+    #         setattr(instance, key, value)
+
+    #     instance.save()
+    #     return instance
+
 
 
 class GalleryFormatSerializer(serializers.Serializer):
-    url = serializers.URLField()
-    catagory = serializers.CharField(max_length=20)
-
+    url = serializers.CharField()  # Store as a string instead of URL field
+    category = serializers.CharField(max_length=20)
 
 class GallerySerializer(serializers.Serializer):
     id = ObjectIdField(read_only=True)
-    Gallery = GalleryFormatSerializer(many=True)  # Nested serializer for multiple reviews
-
+    Gallery = GalleryFormatSerializer(many=True)  # Nested serializer for multiple images
 
     def create(self, validated_data):
         """Create and return a new Gallery instance."""
@@ -98,25 +135,29 @@ class GallerySerializer(serializers.Serializer):
         gallery_instances = [GalleryFormat(**gallery) for gallery in gallery_data]
         return Gallery(Gallery=gallery_instances).save()
 
-    # def update(self, instance, validated_data):
-    #     """Update and return an existing Gallery instance."""
-    #     if "Gallery" in validated_data:
-    #         gallery_data = validated_data.pop("Gallery")
-    #         instance.Gallery = [GalleryFormat(**gallery) for gallery in gallery_data]
-        
     def update(self, instance, validated_data):
         """Update and return an existing Gallery instance."""
         if "Gallery" in validated_data:
             gallery_data = validated_data.pop("Gallery")
-            # Append new images to the existing list instead of replacing
             for gallery_item in gallery_data:
-                instance.Gallery.append(GalleryFormat(**gallery_item))
+                instance.Gallery.append(GalleryFormat(**gallery_item))  # Append new images
 
         for key, value in validated_data.items():
             setattr(instance, key, value)
 
         instance.save()
         return instance
+
+
+
+
+
+
+
+
+
+
+
 
 
 
