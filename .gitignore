@@ -2,7 +2,7 @@
 venv/
 
 # Byte-compiled / optimized / package files
-_pycache_/
+__pycache__/
 *.py[cod]
 *$py.class
 
