@@ -36,7 +36,6 @@ INSTALLED_APPS = [
     'core',
     'portfolio',
     'chat',
-    'corsheaders',
     'search'
 ]
 
