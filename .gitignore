@@ -1,1 +1,54 @@
 .env
+venv/
+
+# Byte-compiled / optimized / package files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual environment
+venv/
+env/
+*.env
+*.venv
+Pipfile
+Pipfile.lock
+
+# Django secret key and environment variables
+.env
+*.secrets.json
+
+# Database
+db.sqlite3
+db.sqlite3-journal
+
+# Django migrations
+**/migrations/*
+
+# Static and media files
+staticfiles/
+media/
+
+# Logs
+logs/
+*.log
+*.out
+*.err
+
+# Local development settings
+.settings/
+config/settings/local.py
+
+# Celery
+celerybeat-schedule
+
+# VS Code, PyCharm, and other IDE files
+.vscode/
+.idea/
+*.iml
+
+# MacOS
+.DS_Store
+
+# Docker
+docker-compose.override.yml
