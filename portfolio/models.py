@@ -2,7 +2,7 @@
 from mongoengine import Document, EmbeddedDocument, StringField, DateTimeField, ListField, URLField,  ReferenceField, FloatField, EmbeddedDocumentField
 import datetime
 
-
+from djongo import models
 
 
 class Header(Document):
@@ -67,3 +67,6 @@ class Package(Document):
     package_type = StringField(max_length=100, required=True)
     created_at = DateTimeField(default=datetime.datetime.utcnow)  # Auto-set on creation
     updated_at = DateTimeField(default=datetime.datetime.utcnow)  # Auto-set on update
+
+    def __str__(self):
+        return self.title

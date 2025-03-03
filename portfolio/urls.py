@@ -1,7 +1,7 @@
 
 '''
 from django.urls import path
-from .views import HeaderListApiView,HeaderDetailsAPIView
+from .views import HeaderListApiView,HeaderDetailsAPIView, get_packages
 
 
 urlpatterns= [
@@ -65,5 +65,5 @@ urlpatterns = [
     path('reviews/<str:review_id>/delete', review_delete_by_id),
 
     path('', include(router.urls)),
-
+    path('packages/', get_packages, name='get_packages'),
 ]

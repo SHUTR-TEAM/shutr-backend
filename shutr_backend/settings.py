@@ -36,9 +36,11 @@ INSTALLED_APPS = [
     'core',
     'portfolio',
     'chat',
+    'search'
 ]
 
 MIDDLEWARE = [
+    'corsheaders.middleware.CorsMiddleware', 
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
 
@@ -153,8 +155,6 @@ STATIC_URL = 'static/'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-
-
 # # AWS S3 Configuration
 # AWS_ACCESS_KEY_ID = 'your-aws-access-key-id'
 # AWS_SECRET_ACCESS_KEY = 'your-aws-secret-access-key'
@@ -174,5 +174,6 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
-
-
+CORS_ALLOWED_ORIGINS = [
+    "http://localhost:3000",  # Allow frontend requests
+]
