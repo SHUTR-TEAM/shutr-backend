@@ -8,6 +8,28 @@ from .models import Header, Gallery, Review
 from bson import ObjectId
 from core.pagination import PaginationWithParams
 
+import os
+# from django.core.files.storage import default_storages
+from django.core.files.storage import default_storage
+from django.core.files.base import ContentFile
+from rest_framework.decorators import api_view, parser_classes
+from rest_framework.parsers import MultiPartParser, FormParser
+from rest_framework.response import Response
+from rest_framework import status
+from bson import ObjectId
+from .models import Header
+from .serializers import HeaderSerializer
+import gridfs
+from django.conf import settings
+from pymongo import MongoClient
+
+client = MongoClient(settings.MONGO_URI)
+db = client.get_database()
+fs = gridfs.GridFS(db)
+
+
+
+
 # Create a new header
 # POST /api/headers/create
 @api_view(['POST'])
@@ -47,17 +69,70 @@ def header_find_by_id(request, header_id):
 # Update a header by ID
 # POST /api/headers/:header_id/update
 @api_view(['POST'])
-@csrf_exempt
+# @csrf_exempt
+@parser_classes([MultiPartParser, FormParser])
 def header_update_by_id(request, header_id):
     try:
         header = Header.objects.get(id=ObjectId(header_id))
+
+        # check if there are any text updates
         serializer = HeaderSerializer(header, data=request.data, partial=True)
         if serializer.is_valid():
             header = serializer.save()
-            return Response({"message": "header updated successfully"}, status=status.HTTP_200_OK)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+        #Handle image uploads
+        # profile_image = request.FILES.get("profile_image")
+        # background_image = request.FILES.get("background_image")
+
+        #  Convert uploaded images to URLs 
+        if 'profile_image' in request.FILES:
+            profile_image = request.FILES['profile_image']
+            profile_image_path = f"media/profile_images/{profile_image.name}"  # Storage path
+            path = default_storage.save(profile_image_path, ContentFile(profile_image.read()))  
+            # header.profile_image_url = f"/{path}"  # Convert file path to URL
+            header.profile_image_url = request.build_absolute_uri(f"/media/{path}")
+
+
+        if 'Background_image' in request.FILES:
+            Background_image = request.FILES['Background_image']
+            Background_image_path = f"media/Background_images/{Background_image.name}"
+            path = default_storage.save(Background_image_path, ContentFile(Background_image.read()))
+            # header.Background_image_url = f"/{path}"
+            header.Background_image_url = request.build_absolute_uri(f"/media/{path}")
+
+        # if profile_image:
+        #     profile_id = fs.put(profile_image, filename=profile_image.name)
+        #     profile_url = f"/api/get_image/{profile_id}"
+        #     header.profile_image_url = profile_url
+
+        # if background_image:
+        #     background_id = fs.put(background_image, filename=background_image.name)
+        #     background_url = f"/api/get_image/{background_id}"
+        #     header.background_image_url = background_url
+
+        header.save()
+           
+        return Response({
+            "message": "Header updated successfully",
+            "profile_image_url": header.profile_image_url,
+            "Background_image_url": header.Background_image_url
+            
+        }, status=status.HTTP_200_OK)
+    
+
+        # return Response({"message": "header updated successfully"}, status=status.HTTP_200_OK)
+        # return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     except Header.DoesNotExist:
         return Response({"error": "Header not found"}, status=status.HTTP_404_NOT_FOUND)
+
+
+
+
+
+
+
+
+
 
 # Delete a header by ID
 # POST /api/headers/:header_id/delete
