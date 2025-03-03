@@ -1,6 +1,6 @@
 
 from django.views.decorators.csrf import csrf_exempt
-from rest_framework.decorators import api_view
+from rest_framework.decorators import api_view, parser_classes
 from rest_framework.response import Response
 from rest_framework import status
 from .serializers import HeaderSerializer, GallerySerializer, ReviewSerializer
@@ -222,7 +222,17 @@ def gallery_delete_by_id(request, gallery_id):
     except Gallery.DoesNotExist:
         return Response({"error": "Gallery not found"}, status=status.HTTP_404_NOT_FOUND)    
     
-    
+
+
+# Create a new review
+@api_view(['POST'])
+def review_create(request):
+    serializer = ReviewSerializer(data=request.data)
+    if serializer.is_valid():
+        review = serializer.save()
+        return Response({"message": "Review created", "review_id": str(review.id)}, status=status.HTTP_201_CREATED)
+    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+ 
 
 
 
