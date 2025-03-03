@@ -23,6 +23,7 @@ ALLOWED_HOSTS = [
 
 # Application definition
 INSTALLED_APPS = [
+    'corsheaders',
     'daphne',
     'django.contrib.admin',
     'django.contrib.auth',
@@ -33,13 +34,18 @@ INSTALLED_APPS = [
     'channels',
     'rest_framework',
     'core',
+    'portfolio',
     'chat',
-    'corsheaders',
+    'search',
 ]
 
 MIDDLEWARE = [
+    'corsheaders.middleware.CorsMiddleware', 
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
+
+    
+
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
@@ -47,6 +53,13 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'corsheaders.middleware.CorsMiddleware',
 ]
+
+
+CORS_ALLOWED_ORIGINS = [
+    "http://localhost:3000",  # Allow frontend to access the API
+]
+
+
 
 ROOT_URLCONF = 'shutr_backend.urls'
 
@@ -81,6 +94,7 @@ CHANNEL_LAYERS = {
 }
 
 # Dummy db for Django
+
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.dummy',
@@ -143,3 +157,7 @@ STATIC_URL = 'static/'
 # https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+CORS_ALLOWED_ORIGINS = [
+    "http://localhost:3000",  # Allow frontend requests
+]
