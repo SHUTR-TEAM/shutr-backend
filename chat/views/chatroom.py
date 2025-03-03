@@ -5,12 +5,10 @@ from rest_framework import status
 
 from chat.models.chatroom import ChatRoom
 from chat.serializers.chatroom import ChatRoomSerializer
-from django.views.decorators.csrf import csrf_exempt
 
 # Create a new chat room.
 # POST /api/chat/rooms/create
 @api_view(['POST'])
-@csrf_exempt
 def chat_room_create(request):
     serializer = ChatRoomSerializer(data=request.data)
     if serializer.is_valid():
@@ -24,7 +22,6 @@ def chat_room_create(request):
 # List all chat rooms.
 # GET /api/chat/rooms
 @api_view(['GET'])
-@csrf_exempt
 def chat_room_list(request):
     participant_id = request.GET.get('participantId')  # Get the participant ID from query params
 

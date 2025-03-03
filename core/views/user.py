@@ -33,7 +33,7 @@ def user_find_all(request):
 # GET /api/users/:user_id
 @api_view(['GET'])
 @csrf_exempt
-def user_find_by_id(request, user_id):
+def user_find_by_id(user_id):
     try:
         user = User.objects.get(id=ObjectId(user_id))
         serializer = UserSerializer(user)

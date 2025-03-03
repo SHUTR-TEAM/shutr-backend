@@ -32,8 +32,8 @@ class ChatConsumer(AsyncWebsocketConsumer):
         # media_url = text_data_json['media_url']
 
         # Save message to database
-        room = ChatRoom.objects.get(id=self.room_id)
-        ChatMessage.objects.create(chat=room, sender=sender, text=text)
+        room = await ChatRoom.objects.aget(id=self.room_id)
+        await ChatMessage.objects.acreate(room=room, sender=sender, text=text)
 
         # Broadcast message to room group
         await self.channel_layer.group_send(
@@ -47,10 +47,10 @@ class ChatConsumer(AsyncWebsocketConsumer):
 
     async def chat_message(self, event):
         sender = event['sender']
-        text = event['text']
+        content = event['content']
 
         # Send message to WebSocket
         await self.send(text_data=json.dumps({
             'sender': sender,
-            'text': text,
+            'content': content,
         }))
