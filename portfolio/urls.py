@@ -1,7 +1,7 @@
 
 '''
 from django.urls import path
-from .views import HeaderListApiView,HeaderDetailsAPIView
+from .views import HeaderListApiView,HeaderDetailsAPIView, get_packages
 
 
 urlpatterns= [
@@ -11,8 +11,9 @@ urlpatterns= [
 ]
 
 '''
-
 from django.urls import path
+from .views import get_packages
+
 
 from .views import (
     header_create,
@@ -54,4 +55,6 @@ urlpatterns = [
     path('reviews/<str:review_id>', review_find_by_id),
     path('reviews/<str:review_id>/update', review_update_by_id),
     path('reviews/<str:review_id>/delete', review_delete_by_id),
+
+    path('packages/', get_packages, name='get_packages'),
 ]

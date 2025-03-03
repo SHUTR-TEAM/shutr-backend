@@ -2,7 +2,7 @@
 from mongoengine import Document, EmbeddedDocument, StringField, DateTimeField, ListField, URLField,  ReferenceField, FloatField, EmbeddedDocumentField
 import datetime
 
-
+from djongo import models
 
 
 class Header(Document):
@@ -49,3 +49,12 @@ class Review(Document):
 #     profile_image_url = StringField(max_length=255)
 
 
+class Package(models.Model):
+    title = models.CharField(max_length=255)
+    price = models.CharField(max_length=50)
+    description = models.TextField()
+    details = models.JSONField()  # Store details as an array
+    packageType = models.CharField(max_length=100)
+
+    def __str__(self):
+        return self.title
