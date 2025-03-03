@@ -5,6 +5,8 @@ from pathlib import Path
 import os 
 from pathlib import Path
 from django.core.management.utils import get_random_secret_key
+import sys
+
 
 load_dotenv()
 DATABASE_URL = os.getenv("DATABASE_URL")
@@ -159,6 +161,12 @@ MEDIA_ROOT= BASE_DIR / 'media'
 
 SECRET_ROOT = BASE_DIR / 'static'
 
+AUTHENTICATION_BACKENDS = [
+    'social_core.backends.google.GoogleOAuth2',
+    'social_core.backends.facebook.FacebookOAuth2',
+    'django.contrib.auth.backends.ModelBackend',
+]
+
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field
 
@@ -183,6 +191,7 @@ DJOSER= {
     'USER_CREATE_PASSWORD_RETYPE': True,
     'PASSWORD_RESET_CONFIRM_RETYPE': True,
     'TOKEN_MODEL': None,
+    'SOCIAL_AUTH_ALLOWED_REDIRECT_URIS': os.getenv('REDIRECT_URLS').split(',')
 }
 
 AUTH_COOKIE = 'access'
