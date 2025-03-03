@@ -51,6 +51,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'corsheaders.middleware.CorsMiddleware',
 ]
 
 
@@ -77,6 +78,8 @@ TEMPLATES = [
         },
     },
 ]
+
+CORS_ALLOW_ALL_ORIGINS = True
 
 WSGI_APPLICATION = 'shutr_backend.wsgi.application'
 
