@@ -21,14 +21,18 @@ class UserSerializer(serializers.Serializer):
     """Custom serializer for the User model."""
     
     id = ObjectIdField(read_only=True)  # MongoDB ObjectId
-    first_name = serializers.CharField(max_length=50)
-    last_name = serializers.CharField(max_length=50)
-    email = serializers.EmailField()
-    password = serializers.CharField(write_only=True)  # Do not include in responses
-    nic = serializers.CharField(max_length=50)
-    phone_num = serializers.CharField(max_length=50)
-    address = serializers.CharField(max_length=50, allow_blank=True, required=False)
-    profile_image_url = serializers.CharField(max_length=255, allow_blank=True, required=False)
+    name = serializers.CharField(max_length=100)
+    price = serializers.FloatField()
+    min_price = serializers.FloatField()
+    max_price = serializers.FloatField()
+    availability = serializers.DateTimeField()
+    experience_level = serializers.ChoiceField(choices=["Beginner", "Intermediate", "Expert"])
+    tags = serializers.ListField(child=serializers.CharField(max_length=50))
+    location = serializers.CharField(max_length=100)
+    reviews = serializers.IntegerField(default=0)
+    rating = serializers.FloatField(min_value=0, max_value=5, default=0)
+    images = serializers.ListField(child=serializers.URLField())
+    description = serializers.CharField(max_length=500, allow_blank=True, required=False)
     created_at = serializers.DateTimeField(read_only=True)
     updated_at = serializers.DateTimeField(read_only=True)
 
