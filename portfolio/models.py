@@ -2,7 +2,7 @@
 from mongoengine import Document, EmbeddedDocument, StringField, DateTimeField, ListField, URLField,  ReferenceField, FloatField, EmbeddedDocumentField
 import datetime
 
-from djongo import models
+# from djongo import models
 
 
 class Header(Document):

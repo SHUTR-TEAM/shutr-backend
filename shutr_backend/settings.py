@@ -40,7 +40,7 @@ INSTALLED_APPS = [
     'core',
     'portfolio',
     'chat',
-    'search'
+    'search',
     'djoser',
     'social_django',
     'user',
