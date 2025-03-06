@@ -145,7 +145,10 @@ class ReviewSerializer(serializers.Serializer):
 
 <<<<<<< Updated upstream
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
 =======
+=======
+>>>>>>> Stashed changes
 =======
 >>>>>>> Stashed changes
 # class PackageSerializer(serializers.Serializer):
@@ -175,6 +178,10 @@ class PackageSerializer(serializers.ModelSerializer):
         model = Package
         fields = ['id', 'title', 'price', 'description', 'details', 'package_type']
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
+        read_only_fields = ['id']
+>>>>>>> Stashed changes
+=======
         read_only_fields = ['id']
 >>>>>>> Stashed changes
 =======
