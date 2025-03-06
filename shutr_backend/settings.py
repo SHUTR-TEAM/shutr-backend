@@ -44,6 +44,7 @@ INSTALLED_APPS = [
     'djoser',
     'social_django',
     'user',
+    'BookingInformation',
 ]
 
 MIDDLEWARE = [
