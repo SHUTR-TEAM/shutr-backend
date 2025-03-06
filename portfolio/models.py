@@ -3,7 +3,7 @@ from mongoengine import Document, EmbeddedDocument, StringField, DateTimeField, 
 import datetime
 
 from djongo import models
-
+from django.db import models
 
 class Header(Document):
     name = StringField(max_length=41)
@@ -49,12 +49,33 @@ class Review(Document):
 #     profile_image_url = StringField(max_length=255)
 
 
+<<<<<<< Updated upstream
+=======
+# class Package(Document):
+#     title = StringField(max_length=255, required=True)
+#     price = StringField(max_length=50, required=True)
+#     description = StringField(max_length=1000, required=True)
+#     details = ListField(StringField(), required=True)  # List of package details
+#     package_type = StringField(max_length=100, required=True)
+#     created_at = DateTimeField(default=datetime.datetime.utcnow)  # Auto-set on creation
+#     updated_at = DateTimeField(default=datetime.datetime.utcnow)  # Auto-set on update
+
+#     def __str__(self):
+#         return self.title
+
+
+>>>>>>> Stashed changes
 class Package(models.Model):
     title = models.CharField(max_length=255)
     price = models.CharField(max_length=50)
     description = models.TextField()
+<<<<<<< Updated upstream
     details = models.JSONField()  # Store details as an array
     packageType = models.CharField(max_length=100)
+=======
+    details = models.JSONField(default=list)  # Store details as a list
+    package_type = models.CharField(max_length=50)
+>>>>>>> Stashed changes
 
     def __str__(self):
         return self.title
