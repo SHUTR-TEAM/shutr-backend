@@ -50,7 +50,10 @@ class Review(Document):
 
 
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
 =======
+=======
+>>>>>>> Stashed changes
 # class Package(Document):
 #     title = StringField(max_length=255, required=True)
 #     price = StringField(max_length=50, required=True)
@@ -64,14 +67,22 @@ class Review(Document):
 #         return self.title
 
 
+<<<<<<< Updated upstream
+>>>>>>> Stashed changes
+=======
 >>>>>>> Stashed changes
 class Package(models.Model):
     title = models.CharField(max_length=255)
     price = models.CharField(max_length=50)
     description = models.TextField()
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
     details = models.JSONField()  # Store details as an array
     packageType = models.CharField(max_length=100)
+=======
+    details = models.JSONField(default=list)  # Store details as a list
+    package_type = models.CharField(max_length=50)
+>>>>>>> Stashed changes
 =======
     details = models.JSONField(default=list)  # Store details as a list
     package_type = models.CharField(max_length=50)

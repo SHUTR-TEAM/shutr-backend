@@ -144,7 +144,10 @@ class ReviewSerializer(serializers.Serializer):
         return instance
 
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
 =======
+=======
+>>>>>>> Stashed changes
 # class PackageSerializer(serializers.Serializer):
 #     id = ObjectIdField(read_only=True)
 #     title = serializers.CharField(max_length=255)
@@ -171,5 +174,9 @@ class PackageSerializer(serializers.ModelSerializer):
     class Meta:
         model = Package
         fields = ['id', 'title', 'price', 'description', 'details', 'package_type']
+<<<<<<< Updated upstream
+        read_only_fields = ['id']
+>>>>>>> Stashed changes
+=======
         read_only_fields = ['id']
 >>>>>>> Stashed changes

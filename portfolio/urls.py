@@ -20,6 +20,9 @@ from .views import get_packages
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
 # from .views import PackageViewSet
+<<<<<<< Updated upstream
+>>>>>>> Stashed changes
+=======
 >>>>>>> Stashed changes
 
 # from .views import PackageList
@@ -75,8 +78,11 @@ urlpatterns = [
     path('reviews/<str:review_id>/delete', review_delete_by_id),
 
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
     path('packages/', get_packages, name='get_packages'),
 =======
+=======
+>>>>>>> Stashed changes
     # path('', include(router.urls)),
     # path('packages/', get_packages, name='get_packages'),
 
@@ -86,5 +92,8 @@ urlpatterns = [
     path('packages/', PackageListCreateView.as_view(), name='package-list-create'),
     path('packages/<int:pk>/', PackageRetrieveUpdateDestroyView.as_view(), name='package-retrieve-update-destroy'),
 
+<<<<<<< Updated upstream
+>>>>>>> Stashed changes
+=======
 >>>>>>> Stashed changes
 ]

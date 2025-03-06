@@ -317,6 +317,7 @@ class PackageListCreateView(generics.ListCreateAPIView):
     serializer_class = PackageSerializer
 
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
     def create(self, request, *args, **kwargs):
         """Create a new package"""
         serializer = self.get_serializer(data=request.data)
@@ -355,6 +356,11 @@ class PackageListCreateView(generics.ListCreateAPIView):
             return Response({"message": "Package deleted successfully"}, status=status.HTTP_204_NO_CONTENT)
         except Package.DoesNotExist:
             return Response({"error": "Package not found"}, status=status.HTTP_404_NOT_FOUND)
+=======
+class PackageRetrieveUpdateDestroyView(generics.RetrieveUpdateDestroyAPIView):
+    queryset = Package.objects.all()
+    serializer_class = PackageSerializer
+>>>>>>> Stashed changes
 =======
 class PackageRetrieveUpdateDestroyView(generics.RetrieveUpdateDestroyAPIView):
     queryset = Package.objects.all()
