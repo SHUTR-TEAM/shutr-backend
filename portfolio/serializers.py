@@ -1,6 +1,7 @@
 from rest_framework import serializers
 from bson import ObjectId
-from .models import Header, Gallery, Review, ReviewFormat, GalleryFormat, Package  # Import your MongoEngine model
+#from .models import Header, Gallery, Review, ReviewFormat, GalleryFormat, Package  # Import your MongoEngine model
+from .models import Header, Gallery, Review, ReviewFormat, GalleryFormat
 import datetime
 
 from django.conf import settings
@@ -213,22 +214,22 @@ class ReviewSerializer(serializers.Serializer):
         instance.save()
         return instance
 
-class PackageSerializer(serializers.Serializer):
-    id = ObjectIdField(read_only=True)
-    title = serializers.CharField(max_length=255)
-    price = serializers.CharField(max_length=50)
-    description = serializers.CharField(max_length=1000)
-    details = serializers.ListField(child=serializers.CharField())
-    package_type = serializers.CharField(max_length=100)
-    created_at = serializers.DateTimeField(read_only=True)
-    updated_at = serializers.DateTimeField(read_only=True)
+# class PackageSerializer(serializers.Serializer):
+#     id = ObjectIdField(read_only=True)
+#     title = serializers.CharField(max_length=255)
+#     price = serializers.CharField(max_length=50)
+#     description = serializers.CharField(max_length=1000)
+#     details = serializers.ListField(child=serializers.CharField())
+#     package_type = serializers.CharField(max_length=100)
+#     created_at = serializers.DateTimeField(read_only=True)
+#     updated_at = serializers.DateTimeField(read_only=True)
 
-    def create(self, validated_data):
-        return Package(**validated_data).save()
+#     def create(self, validated_data):
+#         return Package(**validated_data).save()
 
-    def update(self, instance, validated_data):
-        for key, value in validated_data.items():
-            setattr(instance, key, value)
-        instance.updated_at = datetime.datetime.utcnow()
-        instance.save()
-        return instance
+#     def update(self, instance, validated_data):
+#         for key, value in validated_data.items():
+#             setattr(instance, key, value)
+#         instance.updated_at = datetime.datetime.utcnow()
+#         instance.save()
+#         return instance

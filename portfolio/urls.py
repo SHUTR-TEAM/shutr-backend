@@ -11,10 +11,10 @@ urlpatterns= [
 ]
 
 '''
-
-from django.urls import path, include
+from django.urls import path
+# from django.urls import path, include
 from rest_framework.routers import DefaultRouter
-from .views import PackageViewSet
+# from .views import PackageViewSet , get_packages
 
 
 
@@ -30,6 +30,7 @@ from .views import (
     gallery_find_by_id,
     gallery_update_by_id,
     gallery_delete_by_id,
+    gallery_delete_photo,
 
     review_create,
     review_find_all,
@@ -41,8 +42,8 @@ from .views import (
 )
 
 # Initialize the router and register the viewset
-router = DefaultRouter()
-router.register(r'packages', PackageViewSet, basename="package")
+# router = DefaultRouter()
+# router.register(r'packages', PackageViewSet, basename="package")
 
 
 urlpatterns = [
@@ -57,6 +58,8 @@ urlpatterns = [
     path('galleries/<str:gallery_id>', gallery_find_by_id),
     path('galleries/<str:gallery_id>/update', gallery_update_by_id),
     path('galleries/<str:gallery_id>/delete', gallery_delete_by_id),
+    path('galleries/<str:gallery_id>/delete_photo', gallery_delete_photo),
+
 
     path('reviews', review_find_all),
     path('reviews/create', review_create),
@@ -64,6 +67,6 @@ urlpatterns = [
     path('reviews/<str:review_id>/update', review_update_by_id),
     path('reviews/<str:review_id>/delete', review_delete_by_id),
 
-    path('', include(router.urls)),
-    path('packages/', get_packages, name='get_packages'),
+    # path('', include(router.urls)),
+    # path('packages/', get_packages, name='get_packages'),
 ]
