@@ -81,10 +81,18 @@ def user_find_all(request):
 
 
     # Fetch users using mongoengine ORM
-    if filters:
-        users_queryset = User.objects(__raw__=filters)  # Use __raw__ to apply direct MongoDB query
-    else:
-        users_queryset = User.objects.all()  # Fetch all data if no filters are applied
+    try:
+        if filters:
+            users_queryset = User.objects(__raw__=filters)  # Use __raw__ to apply direct MongoDB query
+        else:
+            users_queryset = User.objects.all()  # Fetch all data if no filters are applied
+        
+        if not users_queryset.count():  # Check if query returned any results
+            return JsonResponse([], status=404)
+            
+    except Exception as e:
+        return JsonResponse({"error": str(e)}, status=500)
+
 
     # Convert users to JSON (without pagination metadata)
     users_json = [user.to_mongo().to_dict() for user in users_queryset]
