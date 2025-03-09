@@ -1,7 +1,7 @@
 from rest_framework import serializers
-from .models import BookingInformation
+from .models import booking_information
 
-class BookingInformationSerializer(serializers.ModelSerializer):
+class booking_informationSerializer(serializers.ModelSerializer):
     class Meta:
-        model = Event
+        model = booking_information  # Fixed reference to correct model
         fields = '__all__'
