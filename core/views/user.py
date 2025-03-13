@@ -31,11 +31,13 @@ def user_create(request):
 #     serializer = UserSerializer(paginated_users, many=True)
 #     return paginator.get_paginated_response(serializer.data)
 
-#for search 
+
+#function to handle search page
 @api_view(['GET'])
 @csrf_exempt
 def user_find_all(request):
-    # Get query parameters
+    
+    #Extracts query parameters and saves them to variables
     search = request.GET.get("q", "").strip()
     style = request.GET.get('style', "").strip()
     min_price = request.GET.get("minPrice", "").strip()
@@ -43,61 +45,50 @@ def user_find_all(request):
     availability = request.GET.get("availability", "").strip()
     experienceLevel = request.GET.get("experienceLevel", "").strip()
 
-    # Build MongoEngine query filters
     filters = {}
 
-    # Apply filters only if there are query parameters
+    #Builds a filter dictionary based on provided query parameters for searching and filtering users
     if search or style or min_price or max_price or availability or experienceLevel:
-        
-        # Search filter (by name and tags)
         if search:
             filters["$or"] = [
-                {"name": {"$regex": search, "$options": "i"}},  
-                {"tags": {"$regex": search, "$options": "i"}},  
+                {"name": {"$regex": search, "$options": "i"}},
+                {"tags": {"$regex": search, "$options": "i"}},
                 {"location": {"$regex": search, "$options": "i"}},
             ]
-
-         # Filter by style (e.g., "Wedding", "Portrait")
+        
         if style:
             filters["tags"] = {"$regex": style, "$options": "i"}
 
-        # Filter by price range
         if min_price and max_price:
             filters["price"] = {"$gte": int(min_price), "$lte": int(max_price)}
         elif min_price:
-                    #database name
-            filters["min_price"] = {"$gte": int(min_price)}
+            filters["price"] = {"$gte": int(min_price)}
         elif max_price:
-            filters["max_price"] = {"$lte": int(max_price)}
+            filters["price"] = {"$lte": int(max_price)}
 
-
-        # Filter by availability (Assuming availability is stored as a date string in the database)
         if availability:
-            filters["availability"] = availability  # Adjust if needed for date format
+            filters["availability"] = availability  
 
-        # Filter by experience level (e.g., "Beginner", "Intermediate", "Expert")
         if experienceLevel:
-            filters["experience_level"] = {"$regex": experienceLevel, "$options": "i"}    
+            filters["experience_level"] = {"$regex": experienceLevel, "$options": "i"}
 
-
-    # Fetch users using mongoengine ORM
     try:
         if filters:
-            users_queryset = User.objects(__raw__=filters)  # Use __raw__ to apply direct MongoDB query
+            #directly apply MongoDB's raw query filters.
+            users_queryset = User.objects(__raw__=filters)
+
+            # Return empty list when no results
+            if not users_queryset.count():
+                return JsonResponse([], safe=False)  
         else:
-            users_queryset = User.objects.all()  # Fetch all data if no filters are applied
-        
-        if not users_queryset.count():  # Check if query returned any results
-            return JsonResponse([], status=404)
-            
+            # Return all users when no filters are applied
+            users_queryset = User.objects.all() 
+
     except Exception as e:
         return JsonResponse({"error": str(e)}, status=500)
 
-
-    # Convert users to JSON (without pagination metadata)
+    #convert the MongoDB query results into JSON format
     users_json = [user.to_mongo().to_dict() for user in users_queryset]
-
-    # Return only the list of users
     return JsonResponse(users_json, safe=False)
 
 
