@@ -39,34 +39,41 @@ class Gallery(Document):
 #     #id = ReferenceField(Header, required=False)    
 
 
-class ReviewFormat(EmbeddedDocument):
-     name =  StringField(max_length=41)
-     rating = FloatField(min_value=0.0, max_value=10.0)
-     reviewText = StringField(max_length=1000 )
-     profile_image_url = StringField(max_length=255)
-     address = StringField(max_length=35)
 
 
+# class ReviewFormat(EmbeddedDocument):
+#     #  profile_image_url = StringField(max_length=255)
+#     #  address = StringField(max_length=35)
+#     #  name =  StringField(max_length=41)
+#     rating = FloatField(min_value=0.0, max_value=10.0)
+#     reviewText = StringField(max_length=1000 )
+#     userID = ReferenceField('User', required=True)  # foreign key which is used to connect with the user
+#     photographerID = ReferenceField('User', required=True)
 
-class Review(Document):
-    reviews = ListField(EmbeddedDocumentField(ReviewFormat))
 
 
 # class Review(Document):
-#     name =  StringField(max_length=41)
-#     rating = FloatField(min_value=0.0, max_value=10.0)
-#     reviewText = StringField(max_length=1000 )
-#     profile_image_url = StringField(max_length=255)
+#     reviews = ListField(EmbeddedDocumentField(ReviewFormat))
 
 
-class Package(Document):
-    title = StringField(max_length=255, required=True)
-    price = StringField(max_length=50, required=True)
-    description = StringField(max_length=1000, required=True)
-    details = ListField(StringField(), required=True)  # List of package details
-    package_type = StringField(max_length=100, required=True)
-    created_at = DateTimeField(default=datetime.datetime.utcnow)  # Auto-set on creation
-    updated_at = DateTimeField(default=datetime.datetime.utcnow)  # Auto-set on update
+class Review(Document):
+    user = ReferenceField('User', required=True)  # foreign key which is used to connect with the user
+    photographer = ReferenceField('User', required=True)
+    rating = FloatField(min_value=0.0, max_value=10.0)
+    reviewText = StringField(max_length=1000 )
 
-    def __str__(self):
-        return self.title
+
+     
+
+
+# class Package(Document):
+#     title = StringField(max_length=255, required=True)
+#     price = StringField(max_length=50, required=True)
+#     description = StringField(max_length=1000, required=True)
+#     details = ListField(StringField(), required=True)  # List of package details
+#     package_type = StringField(max_length=100, required=True)
+#     created_at = DateTimeField(default=datetime.datetime.utcnow)  # Auto-set on creation
+#     updated_at = DateTimeField(default=datetime.datetime.utcnow)  # Auto-set on update
+
+#     def __str__(self):
+#         return self.title

@@ -9,6 +9,8 @@ from bson import ObjectId
 from core.pagination import PaginationWithParams
 from rest_framework import viewsets
 
+from core.models.user import User 
+
 import os
 # from django.core.files.storage import default_storages
 from django.core.files.storage import default_storage
@@ -24,9 +26,9 @@ import gridfs
 from django.conf import settings
 from pymongo import MongoClient
 
-from rest_framework import viewsets
-from .models import Package
-from .serializers import PackageSerializer
+# from rest_framework import viewsets
+# from .models import Package
+# from .serializers import PackageSerializer
 
 client = MongoClient(settings.MONGO_URI)
 db = client.get_database()
@@ -260,23 +262,46 @@ def gallery_delete_by_id(request, gallery_id):
         gallery.delete()
         return Response({"message": "gallery deleted successfully"}, status=status.HTTP_200_OK)
     except Gallery.DoesNotExist:
-        return Response({"error": "Gallery not found"}, status=status.HTTP_404_NOT_FOUND)    
-    
+        return Response({"error": "Gallery not found"}, status=status.HTTP_404_NOT_FOUND) 
 
 
-# Create a new review
+# Delete a photo in gallery by ID and url        
+# POST /api/galleries/:gallery_id/delete_photo
 @api_view(['POST'])
-def review_create(request):
-    serializer = ReviewSerializer(data=request.data)
-    if serializer.is_valid():
-        review = serializer.save()
-        return Response({"message": "Review created", "review_id": str(review.id)}, status=status.HTTP_201_CREATED)
-    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+@csrf_exempt
+def gallery_delete_photo(request, gallery_id):
+    try:
+        # Get the gallery object
+        gallery = Gallery.objects.get(id=ObjectId(gallery_id))
+
+        # Extract image URL from the request body
+        image_url = request.data.get('image_url', None)
+
+        if not image_url:
+            return Response({"error": "No image URL provided"}, status=status.HTTP_400_BAD_REQUEST)
+
+        # Find the image in the Gallery and remove it
+        gallery.Gallery = [image for image in gallery.Gallery if image.url != image_url]
+
+        # Save the updated gallery
+        gallery.save()
+
+        return Response({"message": "Photo deleted successfully"}, status=status.HTTP_200_OK)
+
+    except Gallery.DoesNotExist:
+        return Response({"error": "Gallery not found"}, status=status.HTTP_404_NOT_FOUND)
+
+
+
+# # Create a new review
+# @api_view(['POST'])
+# def review_create(request):
+#     serializer = ReviewSerializer(data=request.data)
+#     if serializer.is_valid():
+#         review = serializer.save()
+#         return Response({"message": "Review created", "review_id": str(review.id)}, status=status.HTTP_201_CREATED)
+#     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
  
-
-
-
-
 
 
 
@@ -287,9 +312,7 @@ def review_create(request):
 def review_create(request):
     serializer = ReviewSerializer(data=request.data)
     if serializer.is_valid():
-
         review = serializer.save()
-
         return Response({"message": "review created", "review_id": str(review.id)}, status=status.HTTP_201_CREATED)
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
@@ -304,6 +327,29 @@ def review_find_all(request):
     paginated_reviews = paginator.paginate_queryset(reviews, request)
     serializer = ReviewSerializer(paginated_reviews, many=True)
     return paginator.get_paginated_response(serializer.data)
+
+
+
+# Find all reviews for a specific photographer
+# GET /api/reviews/photographer/:photographer_id
+@api_view(['GET'])
+@csrf_exempt
+def review_find_by_photographer(request, photographer_id):
+    try:
+        photographer = User.objects.get(id=ObjectId(photographer_id))
+        reviews = Review.objects.filter(photographer=photographer)
+        
+        if not reviews:
+            return Response({"message": "No reviews found for this photographer"}, status=status.HTTP_404_NOT_FOUND)
+        
+        serializer = ReviewSerializer(reviews, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+    except User.DoesNotExist:
+        return Response({"error": "Photographer not found"}, status=status.HTTP_404_NOT_FOUND)
+    except Exception as e:
+        return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
+
 
 
 # Find a review by ID
@@ -356,45 +402,45 @@ def review_delete_by_id(request, review_id):
 #     return Response(serializer.data)
 
 
-class PackageViewSet(viewsets.ModelViewSet):
-    queryset = Package.objects.all()
-    serializer_class = PackageSerializer
+# class PackageViewSet(viewsets.ModelViewSet):
+#     queryset = Package.objects.all()
+#     serializer_class = PackageSerializer
 
-    def create(self, request, *args, **kwargs):
-        """Create a new package"""
-        serializer = self.get_serializer(data=request.data)
-        if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+#     def create(self, request, *args, **kwargs):
+#         """Create a new package"""
+#         serializer = self.get_serializer(data=request.data)
+#         if serializer.is_valid():
+#             serializer.save()
+#             return Response(serializer.data, status=status.HTTP_201_CREATED)
+#         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-    def retrieve(self, request, pk=None):
-        """Get a single package by ID"""
-        try:
-            package = Package.objects.get(pk=pk)
-            serializer = PackageSerializer(package)
-            return Response(serializer.data)
-        except Package.DoesNotExist:
-            return Response({"error": "Package not found"}, status=status.HTTP_404_NOT_FOUND)
+#     def retrieve(self, request, pk=None):
+#         """Get a single package by ID"""
+#         try:
+#             package = Package.objects.get(pk=pk)
+#             serializer = PackageSerializer(package)
+#             return Response(serializer.data)
+#         except Package.DoesNotExist:
+#             return Response({"error": "Package not found"}, status=status.HTTP_404_NOT_FOUND)
 
-    def update(self, request, pk=None):
-        """Update an existing package"""
-        try:
-            package = Package.objects.get(pk=pk)
-        except Package.DoesNotExist:
-            return Response({"error": "Package not found"}, status=status.HTTP_404_NOT_FOUND)
+#     def update(self, request, pk=None):
+#         """Update an existing package"""
+#         try:
+#             package = Package.objects.get(pk=pk)
+#         except Package.DoesNotExist:
+#             return Response({"error": "Package not found"}, status=status.HTTP_404_NOT_FOUND)
         
-        serializer = PackageSerializer(package, data=request.data)
-        if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+#         serializer = PackageSerializer(package, data=request.data)
+#         if serializer.is_valid():
+#             serializer.save()
+#             return Response(serializer.data)
+#         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-    def destroy(self, request, pk=None):
-        """Delete a package"""
-        try:
-            package = Package.objects.get(pk=pk)
-            package.delete()
-            return Response({"message": "Package deleted successfully"}, status=status.HTTP_204_NO_CONTENT)
-        except Package.DoesNotExist:
-            return Response({"error": "Package not found"}, status=status.HTTP_404_NOT_FOUND)
+#     def destroy(self, request, pk=None):
+#         """Delete a package"""
+#         try:
+#             package = Package.objects.get(pk=pk)
+#             package.delete()
+#             return Response({"message": "Package deleted successfully"}, status=status.HTTP_204_NO_CONTENT)
+#         except Package.DoesNotExist:
+#             return Response({"error": "Package not found"}, status=status.HTTP_404_NOT_FOUND)
