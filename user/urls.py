@@ -8,6 +8,8 @@
 # ]
 from django.urls import path, re_path
 from .views import (
+    CustomerSignupView,
+    PhotographerSignupView,
     CustomProviderAuthView,
     CustomTokenObtainPairView,
     CustomTokenRefreshView,
@@ -16,6 +18,10 @@ from .views import (
 )
 
 urlpatterns = [
+    
+    path('signup/customer/', CustomerSignupView.as_view(), name='customer-signup'),
+    path('signup/photographer/', PhotographerSignupView.as_view(), name='photographer-signup'),
+    
     re_path(
         r'^o/(?P<provider>\S+)/$',
         CustomProviderAuthView.as_view(),

@@ -1,4 +1,6 @@
 from django.db import models
+from djongo import models
+
 from django.contrib.auth.models import (
     BaseUserManager,
     AbstractBaseUser,
@@ -39,9 +41,16 @@ class UserAccountManager(BaseUserManager):
 
 
 class UserAccount(AbstractBaseUser, PermissionsMixin):
+    
+    ROLE_CHOICES= (
+        ('customer', 'Customer'),
+        ('photographer', 'Photographer'),
+    )
+    id = models.ObjectIdField()
     first_name = models.CharField(max_length=255)
     last_name = models.CharField(max_length=255)
     email = models.EmailField(unique=True, max_length=255)
+    role = models.CharField(choices=ROLE_CHOICES, max_length=20, default='customer')
 
     is_active = models.BooleanField(default=True)
     is_staff = models.BooleanField(default=False)
@@ -54,3 +63,12 @@ class UserAccount(AbstractBaseUser, PermissionsMixin):
 
     def __str__(self):
         return self.email
+
+class Customer(models.Model):
+    user = models.OneToOneField(UserAccount, on_delete=models.CASCADE)
+    customer_details = models.TextField(blank=True, null=True)
+
+
+class Photographer(models.Model):
+    user = models.OneToOneField(UserAccount, on_delete=models.CASCADE)
+    phone_number = models.CharField(max_length=15)

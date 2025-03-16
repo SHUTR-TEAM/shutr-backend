@@ -11,6 +11,40 @@ from rest_framework_simplejwt.views import (
     TokenRefreshView,
     TokenVerifyView
 )
+from .serializers import CustomerSignupSerializer, PhotographerSignupSerializer
+from rest_framework import generics, status
+
+def set_token_cookies(response, access_token, refresh_token=None):
+    response.set_cookie(
+        'access',
+        access_token,
+        max_age=settings.AUTH_COOKIE_MAX_AGE,
+        path=settings.AUTH_COOKIE_PATH,
+        secure=settings.AUTH_COOKIE_SECURE,
+        httponly=settings.AUTH_COOKIE_HTTP_ONLY,
+        samesite=settings.AUTH_COOKIE_SAMESITE
+    )
+
+    if refresh_token:
+        response.set_cookie(
+            'refresh',
+            refresh_token,
+            max_age=settings.AUTH_COOKIE_MAX_AGE,
+            path=settings.AUTH_COOKIE_PATH,
+            secure=settings.AUTH_COOKIE_SECURE,
+            httponly=settings.AUTH_COOKIE_HTTP_ONLY,
+            samesite=settings.AUTH_COOKIE_SAMESITE
+        )
+
+
+# Customer Signup
+class CustomerSignupView(generics.CreateAPIView):
+    serializer_class = CustomerSignupSerializer
+
+
+# Photographer Signup
+class PhotographerSignupView(generics.CreateAPIView):
+    serializer_class = PhotographerSignupSerializer
 
 
 class CustomProviderAuthView(ProviderAuthView):
