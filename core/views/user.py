@@ -1,3 +1,4 @@
+import datetime
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from rest_framework.decorators import api_view
@@ -88,7 +89,41 @@ def user_find_all(request):
         return JsonResponse({"error": str(e)}, status=500)
 
     #convert the MongoDB query results into JSON format
-    users_json = [user.to_mongo().to_dict() for user in users_queryset]
+    users_json = []
+    for user in users_queryset.as_pymongo():
+        users_json.append({
+            "id": str(user["_id"]),  # Convert ObjectId to string
+            "first_name": user.get("first_name", ""),
+            "last_name": user.get("last_name", ""),
+            "email": user.get("email", ""),
+            "nic": user.get("nic", ""),
+            "phone_num": user.get("phone_num", ""),
+            "address": user.get("address", ""),
+            "profile_image_url": user.get("profile_image_url", ""),
+            "name": user.get("name", ""),
+            "price": user.get("price", 0),
+            "min_price": user.get("min_price", 0),
+            "max_price": user.get("max_price", 0),
+            "availability": user.get("availability", ""),
+            "experience_level": user.get("experience_level", ""),
+            "tags": user.get("tags", []),
+            "location": user.get("location", ""),
+            "reviews": user.get("reviews", 0),
+            "rating": user.get("rating", 0.0),
+            "images": user.get("images", []),
+            "description": user.get("description", ""),
+            "created_at": (
+                datetime.datetime.strptime(user["created_at"], "%Y-%m-%dT%H:%M:%S.%f")
+                if isinstance(user.get("created_at", ""), str)
+                else user.get("created_at", datetime.datetime.utcnow())
+            ).isoformat(),
+            "updated_at": (
+                datetime.datetime.strptime(user["updated_at"], "%Y-%m-%dT%H:%M:%S.%f")
+                if isinstance(user.get("updated_at", ""), str)
+                else user.get("updated_at", datetime.datetime.utcnow())
+            ).isoformat(),
+        })
+
     return JsonResponse(users_json, safe=False)
 
 
