@@ -1,4 +1,6 @@
 from django.db import models
+from djongo import models
+
 from django.contrib.auth.models import (
     BaseUserManager,
     AbstractBaseUser,
@@ -44,7 +46,7 @@ class UserAccount(AbstractBaseUser, PermissionsMixin):
         ('customer', 'Customer'),
         ('photographer', 'Photographer'),
     )
-    
+    id = models.ObjectIdField()
     first_name = models.CharField(max_length=255)
     last_name = models.CharField(max_length=255)
     email = models.EmailField(unique=True, max_length=255)
