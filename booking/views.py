@@ -2,25 +2,29 @@ import datetime
 from bson import ObjectId
 from httplib2 import Credentials
 from rest_framework import status
-from booking.models import Booking
+# from booking.models import Booking
 from django.http import JsonResponse
 from googleapiclient.discovery import build
 from rest_framework.response import Response
-from core.serializers import BookingSerializer
+# from core.serializers import BookingSerializer
 from rest_framework.decorators import api_view
 from google.auth.credentials import Credentials
+from booking.serializer import BookingSerializer
 from core.pagination import PaginationWithParams
 from google.auth.transport.requests import Request
 from django.views.decorators.csrf import csrf_exempt
 # from google_auth_oauthlib.flow import InstalledAppFlow
 from booking.google_calendar_integration import update_google_calendar_event, remove_google_calendar_event
-
+from .models.booking import Booking
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.permissions import AllowAny
 
 
 # Create a new booking
 # POST /api/bookings/create
 @api_view(['POST'])
 @csrf_exempt
+@permission_classes([AllowAny]) 
 def create_booking(request):
     # Deserialize and validate the incoming booking data
     serializer = BookingSerializer(data=request.data)

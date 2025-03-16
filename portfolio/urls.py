@@ -14,7 +14,7 @@ urlpatterns= [
 
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
-from .views import PackageViewSet
+# from .views import PackageViewSet
 
 
 
@@ -30,6 +30,11 @@ from .views import (
     gallery_find_by_id,
     gallery_update_by_id,
     gallery_delete_by_id,
+    package_create,
+    package_delete_by_id,
+    package_find_all,
+    package_find_by_id,
+    package_update_by_id,
 
     review_create,
     review_find_all,
@@ -42,7 +47,7 @@ from .views import (
 
 # Initialize the router and register the viewset
 router = DefaultRouter()
-router.register(r'packages', PackageViewSet, basename="package")
+# router.register(r'packages', PackageViewSet, basename="package")
 
 
 urlpatterns = [
@@ -64,6 +69,14 @@ urlpatterns = [
     path('reviews/<str:review_id>/update', review_update_by_id),
     path('reviews/<str:review_id>/delete', review_delete_by_id),
 
-    path('', include(router.urls)),
-    path('packages/', get_packages, name='get_packages'),
+    path('packages', package_find_all),
+    path('packages/create', package_create),
+    path('packages/<str:package_id>', package_find_by_id),
+    path('packages/<str:package_id>/update', package_update_by_id),
+    path('packages/<str:package_id>/delete', package_delete_by_id),
+    
+    # path('packages', get_packages, name='get_packages'),
+
+
+    # path('', include(router.urls)),
 ]

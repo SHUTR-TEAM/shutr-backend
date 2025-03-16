@@ -1,7 +1,9 @@
 from rest_framework import serializers
 from bson import ObjectId
-from core.models import Booking  # Import your MongoEngine model
 import datetime
+
+from booking.models.booking import Booking
+from portfolio.serializers import PackageSerializer
 
 # Custom field to handle MongoDB ObjectId serialization
 class ObjectIdField(serializers.Field):
@@ -16,51 +18,21 @@ class ObjectIdField(serializers.Field):
 
 # Serializer for Client
 class ClientSerializer(serializers.Serializer):
-    name = serializers.CharField(max_length=100)
-    email = serializers.EmailField()
+    first_name = serializers.CharField(max_length=100)
+    last_name = serializers.CharField(max_length=100)
     phone = serializers.CharField(max_length=20)
-    alternative_contact = serializers.CharField(max_length=20, required=False, allow_blank=True)
-
-
-# Serializer for Venue
-class VenueSerializer(serializers.Serializer):
-    address = serializers.CharField(max_length=255)
-    indoor = serializers.BooleanField(default=True)
-    notes = serializers.CharField(max_length=255, required=False, allow_blank=True)
+    email = serializers.EmailField()
+    address = serializers.CharField(max_length=100, required=False)
+    nic = serializers.CharField(max_length=20)
 
 
 # Serializer for Event
 class EventSerializer(serializers.Serializer):
-    name = serializers.CharField(max_length=255)
+    address = serializers.CharField(max_length=255)
+    date = serializers.CharField(max_length=255)
+    event_setting = serializers.CharField(max_length=255)
+    guest_count = serializers.IntegerField(default=0)
     type = serializers.CharField(max_length=100)
-    date = serializers.DateTimeField()
-    duration_start = serializers.CharField(max_length=10)
-    duration_end = serializers.CharField(max_length=10)
-    venue = VenueSerializer()
-    expected_guests = serializers.IntegerField(default=0)
-
-
-# Serializer for PhotographyDetails
-class PhotographyDetailsSerializer(serializers.Serializer):
-    style = serializers.ListField(child=serializers.CharField(max_length=50), required=False)
-    specific_shots = serializers.ListField(child=serializers.CharField(max_length=100), required=False)
-    special_instructions = serializers.CharField(max_length=255, required=False, allow_blank=True)
-    editing_preferences = serializers.CharField(max_length=100, required=False, allow_blank=True)
-
-
-# Serializer for Package
-class PackageSerializer(serializers.Serializer):
-    name = serializers.CharField(max_length=100)
-    num_photographers = serializers.IntegerField(default=1)
-    extra_services = serializers.ListField(child=serializers.CharField(max_length=100), required=False)
-    price = serializers.FloatField()
-    currency = serializers.CharField(max_length=10, default="USD")
-
-
-# Serializer for Deliverables
-class DeliverablesSerializer(serializers.Serializer):
-    format = serializers.ListField(child=serializers.CharField(max_length=50), default=["Digital Album"])
-    expected_delivery_date = serializers.DateTimeField()
 
 
 # Serializer for Payment
@@ -75,14 +47,17 @@ class PaymentSerializer(serializers.Serializer):
 # **Main Booking Serializer**
 class BookingSerializer(serializers.Serializer):
     id = ObjectIdField(read_only=True)
+    photographer_id = serializers.CharField(max_length=128) 
+    client_id = serializers.CharField(max_length=128) 
     client = ClientSerializer()
     event = EventSerializer()
-    photography_details = PhotographyDetailsSerializer(required=False)
-    package = PackageSerializer()
-    deliverables = DeliverablesSerializer()
-    payment = PaymentSerializer()
+    package_id = serializers.CharField(max_length=128) 
+    # package = PackageSerializer(required=False, allow_null=True)
+    payment = PaymentSerializer(required=False)
     status = serializers.CharField(max_length=50, default="Pending")
+    additional_notes = serializers.CharField(max_length=512, required=False, allow_blank=True) 
     cancellation_policy_agreed = serializers.BooleanField(default=False)
+    terms_and_conditions_agreed = serializers.BooleanField(default=False)
     created_at = serializers.DateTimeField(read_only=True)
     updated_at = serializers.DateTimeField(read_only=True)
 

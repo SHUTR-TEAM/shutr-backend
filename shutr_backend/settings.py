@@ -44,10 +44,10 @@ INSTALLED_APPS = [
     'djoser',
     'social_django',
     'user',
+    'booking',
 ]
 
 MIDDLEWARE = [
-    'corsheaders.middleware.CorsMiddleware', 
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'corsheaders.middleware.CorsMiddleware',
@@ -59,9 +59,11 @@ MIDDLEWARE = [
 ]
 
 
-CORS_ALLOWED_ORIGINS = [
-    "http://localhost:3000",  # Allow frontend to access the API
-]
+# CORS_ALLOWED_ORIGINS = [
+#     "http://localhost:3000",
+#     "http://localhost:3001",
+# ]
+CORS_ALLOW_ALL_ORIGINS = True
 
 
 
@@ -209,9 +211,9 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
-CORS_ALLOWED_ORIGINS = [
-    "http://localhost:3000",  # Allow frontend requests
-]
+# CORS_ALLOWED_ORIGINS = [
+#     "http://localhost:3000",  # Allow frontend requests
+# ]
 REST_FRAMEWORK = {
     # Use Django's standard `django.contrib.auth` permissions,
     # or allow read-only access for unauthenticated users.
@@ -242,10 +244,10 @@ AUTH_COOKIE_PATH = '/'
 AUTH_COOKIE_SAMESITE = 'None'
 
 
-CORS_ALLOWED_ORIGINS = os.getenv(
-    'CORS_ALLOWED_ORIGINS',
-    'http://localhost:3000,http://127.0.0.1:3000'
-).split(',')
+# CORS_ALLOWED_ORIGINS = os.getenv(
+#     'CORS_ALLOWED_ORIGINS',
+#     'http://localhost:3000,http://127.0.0.1:3000', 
+# ).split(',')
 CORS_ALLOW_CREDENTIALS = True
 
 # Default primary key field type

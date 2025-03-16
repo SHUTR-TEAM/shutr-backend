@@ -63,10 +63,10 @@ class Package(Document):
     title = StringField(max_length=255, required=True)
     price = StringField(max_length=50, required=True)
     description = StringField(max_length=1000, required=True)
-    details = ListField(StringField(), required=True)  # List of package details
+    details = ListField(StringField(), required=True)
     package_type = StringField(max_length=100, required=True)
-    created_at = DateTimeField(default=datetime.datetime.utcnow)  # Auto-set on creation
-    updated_at = DateTimeField(default=datetime.datetime.utcnow)  # Auto-set on update
+    created_at = DateTimeField(default=datetime.datetime.utcnow)
+    updated_at = DateTimeField(default=datetime.datetime.utcnow)
 
     def __str__(self):
         return self.title
