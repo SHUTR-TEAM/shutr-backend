@@ -39,24 +39,31 @@ class Gallery(Document):
 #     #id = ReferenceField(Header, required=False)    
 
 
-class ReviewFormat(EmbeddedDocument):
-     name =  StringField(max_length=41)
-     rating = FloatField(min_value=0.0, max_value=10.0)
-     reviewText = StringField(max_length=1000 )
-     profile_image_url = StringField(max_length=255)
-     address = StringField(max_length=35)
 
 
+# class ReviewFormat(EmbeddedDocument):
+#     #  profile_image_url = StringField(max_length=255)
+#     #  address = StringField(max_length=35)
+#     #  name =  StringField(max_length=41)
+#     rating = FloatField(min_value=0.0, max_value=10.0)
+#     reviewText = StringField(max_length=1000 )
+#     userID = ReferenceField('User', required=True)  # foreign key which is used to connect with the user
+#     photographerID = ReferenceField('User', required=True)
 
-class Review(Document):
-    reviews = ListField(EmbeddedDocumentField(ReviewFormat))
 
 
 # class Review(Document):
-#     name =  StringField(max_length=41)
-#     rating = FloatField(min_value=0.0, max_value=10.0)
-#     reviewText = StringField(max_length=1000 )
-#     profile_image_url = StringField(max_length=255)
+#     reviews = ListField(EmbeddedDocumentField(ReviewFormat))
+
+
+class Review(Document):
+    user = ReferenceField('User', required=True)  # foreign key which is used to connect with the user
+    photographer = ReferenceField('User', required=True)
+    rating = FloatField(min_value=0.0, max_value=10.0)
+    reviewText = StringField(max_length=1000 )
+
+
+     
 
 
 # class Package(Document):

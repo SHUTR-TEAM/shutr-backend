@@ -9,6 +9,8 @@ from bson import ObjectId
 from core.pagination import PaginationWithParams
 from rest_framework import viewsets
 
+from core.models.user import User 
+
 import os
 # from django.core.files.storage import default_storages
 from django.core.files.storage import default_storage
@@ -291,19 +293,15 @@ def gallery_delete_photo(request, gallery_id):
 
 
 
-# Create a new review
-@api_view(['POST'])
-def review_create(request):
-    serializer = ReviewSerializer(data=request.data)
-    if serializer.is_valid():
-        review = serializer.save()
-        return Response({"message": "Review created", "review_id": str(review.id)}, status=status.HTTP_201_CREATED)
-    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+# # Create a new review
+# @api_view(['POST'])
+# def review_create(request):
+#     serializer = ReviewSerializer(data=request.data)
+#     if serializer.is_valid():
+#         review = serializer.save()
+#         return Response({"message": "Review created", "review_id": str(review.id)}, status=status.HTTP_201_CREATED)
+#     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
  
-
-
-
-
 
 
 
@@ -314,9 +312,7 @@ def review_create(request):
 def review_create(request):
     serializer = ReviewSerializer(data=request.data)
     if serializer.is_valid():
-
         review = serializer.save()
-
         return Response({"message": "review created", "review_id": str(review.id)}, status=status.HTTP_201_CREATED)
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
@@ -331,6 +327,29 @@ def review_find_all(request):
     paginated_reviews = paginator.paginate_queryset(reviews, request)
     serializer = ReviewSerializer(paginated_reviews, many=True)
     return paginator.get_paginated_response(serializer.data)
+
+
+
+# Find all reviews for a specific photographer
+# GET /api/reviews/photographer/:photographer_id
+@api_view(['GET'])
+@csrf_exempt
+def review_find_by_photographer(request, photographer_id):
+    try:
+        photographer = User.objects.get(id=ObjectId(photographer_id))
+        reviews = Review.objects.filter(photographer=photographer)
+        
+        if not reviews:
+            return Response({"message": "No reviews found for this photographer"}, status=status.HTTP_404_NOT_FOUND)
+        
+        serializer = ReviewSerializer(reviews, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+    except User.DoesNotExist:
+        return Response({"error": "Photographer not found"}, status=status.HTTP_404_NOT_FOUND)
+    except Exception as e:
+        return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
+
 
 
 # Find a review by ID

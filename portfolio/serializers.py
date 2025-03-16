@@ -1,8 +1,15 @@
 from rest_framework import serializers
 from bson import ObjectId
 #from .models import Header, Gallery, Review, ReviewFormat, GalleryFormat, Package  # Import your MongoEngine model
-from .models import Header, Gallery, Review, ReviewFormat, GalleryFormat
+from .models import Header, Gallery, Review,GalleryFormat #ReviewFormat, GalleryFormat
+from core.serializers.user import UserSerializer
 import datetime
+
+from rest_framework import serializers
+from bson import ObjectId
+from core.models.user import User  # Import User model
+from core.serializers.user import UserSerializer
+# from reviews.models import Review  # Import Review model
 
 from django.conf import settings
 from urllib.parse import urljoin
@@ -184,35 +191,166 @@ class GallerySerializer(serializers.Serializer):
 #             return instance
 
 
-class ReviewFormatSerializer(serializers.Serializer):
-    name = serializers.CharField(max_length=41)
-    rating = serializers.FloatField(min_value=0.0, max_value=10.0)
-    reviewText = serializers.CharField(max_length=1000)
-    profile_image_url = serializers.CharField(max_length=255)
-    address = serializers.CharField(max_length=35)
+
+
+# class ReviewSerializer(serializers.Serializer):      
+#      userID = serializers.CharField()  # Store sender ID as string
+#      user = UserSerializer()
+#      photographer = UserSerializer()
+#      photographerID = serializers.CharField()
+#      rating = serializers.FloatField(min_value=0.0, max_value=10.0)
+#      reviewText = serializers.CharField(max_length=1000)
+
+
+#      def validate_userID(self, value):
+#         """Convert userID from string to ObjectId before saving"""
+#         if not ObjectId.is_valid(value):
+#             raise serializers.ValidationError("Invalid ObjectId for userID")
+#         return ObjectId(value)  # Convert string to ObjectId
+
+#      def validate_photographerID(self, value):
+#         """Convert photographerID from string to ObjectId before saving"""
+#         if not ObjectId.is_valid(value):
+#             raise serializers.ValidationError("Invalid ObjectId for photographerID")
+#         return ObjectId(value)  # Convert string to ObjectId
+
+
+    
+#      def create(self, validated_data):
+#         """Create and return a new review instance."""
+#         return Review(**validated_data).save()
+
+#      def update(self, instance, validated_data):
+#             """Update and return an existing review instance."""
+#             for key, value in validated_data.items():
+#                 setattr(instance, key, value)
+#             #instance.updated_at = datetime.datetime.utcnow()
+#             instance.save()
+#             return instance
+
+
+
+
 
 
 class ReviewSerializer(serializers.Serializer):
-    id = ObjectIdField(read_only=True)
-    reviews = ReviewFormatSerializer(many=True)  # Nested serializer for multiple reviews
+    # id = serializers.CharField(read_only=True)  # MongoDB ObjectId as string
+    
+    # Accept only user IDs when creating/updating
+    userID = serializers.CharField(write_only=True)  
+    photographerID = serializers.CharField(write_only=True)
+    
+    # Return full user objects when retrieving
+    user = UserSerializer(read_only=True)
+    photographer = UserSerializer(read_only=True)
+    
+    rating = serializers.FloatField(min_value=0.0, max_value=10.0)
+    reviewText = serializers.CharField(max_length=1000)
+
+    def validate_userID(self, value):
+        """Validate and convert userID from string to ObjectId"""
+        if not ObjectId.is_valid(value):
+            raise serializers.ValidationError("Invalid ObjectId for userID")
+        return ObjectId(value)  # Convert string to ObjectId
+
+    def validate_photographerID(self, value):
+        """Validate and convert photographerID from string to ObjectId"""
+        if not ObjectId.is_valid(value):
+            raise serializers.ValidationError("Invalid ObjectId for photographerID")
+        return ObjectId(value)  # Convert string to ObjectId
 
     def create(self, validated_data):
         """Create and return a new Review instance."""
-        reviews_data = validated_data.pop('reviews', [])
-        review_instances = [ReviewFormat(**review) for review in reviews_data]
-        return Review(reviews=review_instances).save()
+        user_id = validated_data.pop('userID')
+        photographer_id = validated_data.pop('photographerID')
+
+        # Fetch User objects
+        user = User.objects(id=user_id).first()
+        photographer = User.objects(id=photographer_id).first()
+
+        if not user or not photographer:
+            raise serializers.ValidationError("User or Photographer not found")
+
+        review = Review.objects.create(user=user, photographer=photographer, **validated_data)
+        return review
 
     def update(self, instance, validated_data):
         """Update and return an existing Review instance."""
-        if "reviews" in validated_data:
-            reviews_data = validated_data.pop("reviews")
-            instance.reviews = [ReviewFormat(**review) for review in reviews_data]
+        if 'userID' in validated_data:
+            user = User.objects(id=validated_data.pop('userID')).first()
+            if not user:
+                raise serializers.ValidationError("User not found")
+            instance.user = user
         
+        if 'photographerID' in validated_data:
+            photographer = User.objects(id=validated_data.pop('photographerID')).first()
+            if not photographer:
+                raise serializers.ValidationError("Photographer not found")
+            instance.photographer = photographer
+
         for key, value in validated_data.items():
             setattr(instance, key, value)
-        
+
         instance.save()
         return instance
+
+
+
+
+
+
+
+
+
+
+# class ReviewFormatSerializer(serializers.Serializer):
+#     ## name = serializers.CharField(max_length=41)
+#     ## profile_image_url = serializers.CharField(max_length=255)
+#     ## address = serializers.CharField(max_length=35)
+#     userID = serializers.CharField()  # Store sender ID as string
+#     photographerID = serializers.CharField()
+#     rating = serializers.FloatField(min_value=0.0, max_value=10.0)
+#     reviewText = serializers.CharField(max_length=1000)
+
+
+
+# class ReviewSerializer(serializers.Serializer):
+#     id = ObjectIdField(read_only=True)
+#     reviews = ReviewFormatSerializer(many=True)  # Nested serializer for multiple reviews
+
+#     def create(self, validated_data):
+#         """Create and return a new Review instance."""
+#         reviews_data = validated_data.pop('reviews', [])
+#         review_instances = [ReviewFormat(**review) for review in reviews_data]
+#         return Review(reviews=review_instances).save()
+
+#     def update(self, instance, validated_data):
+#         """Update and return an existing Review instance."""
+#         if "reviews" in validated_data:
+#             reviews_data = validated_data.pop("reviews")
+#             instance.reviews = [ReviewFormat(**review) for review in reviews_data]
+        
+#         for key, value in validated_data.items():
+#             setattr(instance, key, value)
+        
+#         instance.save()
+#         return instance
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 # class PackageSerializer(serializers.Serializer):
 #     id = ObjectIdField(read_only=True)

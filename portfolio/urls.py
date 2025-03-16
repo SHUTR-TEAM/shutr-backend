@@ -37,6 +37,7 @@ from .views import (
     review_find_by_id,
     review_update_by_id,
     review_delete_by_id,
+    review_find_by_photographer,
 
 
 )
@@ -66,6 +67,9 @@ urlpatterns = [
     path('reviews/<str:review_id>', review_find_by_id),
     path('reviews/<str:review_id>/update', review_update_by_id),
     path('reviews/<str:review_id>/delete', review_delete_by_id),
+    # path('reviews/photographer/<str:review_id>',review_find_by_photographer)
+    path('reviews/photographer/<str:photographer_id>/', review_find_by_photographer),
+
 
     # path('', include(router.urls)),
     # path('packages/', get_packages, name='get_packages'),

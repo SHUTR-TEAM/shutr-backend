@@ -7,3 +7,4 @@ class ChatMessage(Document):
     text = StringField(required=False)
     media_url = StringField(required=False)  # For images, videos, or files
     timestamp = DateTimeField(default=datetime.datetime.utcnow)
+    
