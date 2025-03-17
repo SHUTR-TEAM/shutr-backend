@@ -1,36 +1,41 @@
 from rest_framework import serializers
-from .models import UserAccount, Customer, Photographer
 
+from portfolio.serializers import HeaderSerializer
+from .models import User, Photographer
 
-class UserAccountSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = UserAccount
-        fields = ['id', 'email', 'first_name', 'last_name', 'role']
+class UserSerializer(serializers.Serializer):
+    email = serializers.EmailField()
+    password = serializers.CharField(write_only=True)
 
+    first_name = serializers.CharField(max_length=255)
+    last_name = serializers.CharField(max_length=255)
+    nic = serializers.CharField(max_length=50, required=True)
+    phone_num = serializers.CharField(max_length=50, required=True)
+    address = serializers.CharField(max_length=255, required=False)
+    profile_image_url = serializers.CharField(max_length=255, required=False)
 
-class CustomerSignupSerializer(serializers.ModelSerializer):
-    user = UserAccountSerializer()
-
-    class Meta:
-        model = Customer
-        fields = ['user', 'customer_details']
-
-    def create(self, validated_data):
-        user_data = validated_data.pop('user')
-        user = UserAccount.objects.create_user(**user_data)
-        customer = Customer.objects.create(user=user, **validated_data)
-        return customer
-
-
-class PhotographerSignupSerializer(serializers.ModelSerializer):
-    user = UserAccountSerializer()
-
-    class Meta:
-        model = Photographer
-        fields = ['user', 'phone_number']
+    role = serializers.ChoiceField(choices=["user", "photographer"], default="user")
+    is_active = serializers.BooleanField(default=True)
 
     def create(self, validated_data):
-        user_data = validated_data.pop('user')
-        user = UserAccount.objects.create_user(**user_data)
-        photographer = Photographer.objects.create(user=user, **validated_data)
-        return photographer
+        role = validated_data.pop("role", "user")
+
+        if role == "photographer":
+            user = Photographer(**validated_data)
+        else:
+            user = User(**validated_data)
+
+        user.set_password(validated_data["password"])
+        user.save()
+        return user
+
+
+class PhotographerSerializer(UserSerializer):
+    portfolio = HeaderSerializer()
+    verified = serializers.BooleanField(default=False)
+
+    def create(self, validated_data):
+        user = Photographer(**validated_data)
+        user.set_password(validated_data["password"])
+        user.save()
+        return user
