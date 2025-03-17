@@ -30,7 +30,7 @@
     MONGO_PASSWORD=your_password
     MONGO_CLUSTER=your_cluster.mongodb.net
     MONGO_DB_NAME=your_database_name
-
+    
 ## Run Server
 
     python manage.py runserver
