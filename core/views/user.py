@@ -121,13 +121,13 @@ def user_find_all(request):
             "images": user.get("images", []),
             "description": user.get("description", ""),
             "created_at": (
-                datetime.datetime.strptime(user["created_at"], "%Y-%m-%dT%H:%M:%S.%f")
-                if isinstance(user.get("created_at", ""), str)
+                datetime.datetime.strptime(user.get("created_at", ""), "%Y-%m-%dT%H:%M:%S.%f")
+                if isinstance(user.get("created_at", ""), str) and user.get("created_at", "")
                 else user.get("created_at", datetime.datetime.utcnow())
             ).isoformat(),
             "updated_at": (
-                datetime.datetime.strptime(user["updated_at"], "%Y-%m-%dT%H:%M:%S.%f")
-                if isinstance(user.get("updated_at", ""), str)
+                datetime.datetime.strptime(user.get("updated_at", ""), "%Y-%m-%dT%H:%M:%S.%f")
+                if isinstance(user.get("updated_at", ""), str) and user.get("updated_at", "")
                 else user.get("updated_at", datetime.datetime.utcnow())
             ).isoformat(),
         })
