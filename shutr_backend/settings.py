@@ -40,10 +40,11 @@ INSTALLED_APPS = [
     'core',
     'portfolio',
     'chat',
-    'search'
+    'search',
     'djoser',
     'social_django',
     'user',
+    'events',
 ]
 
 MIDDLEWARE = [
@@ -84,7 +85,7 @@ TEMPLATES = [
 ]
 
 WSGI_APPLICATION = 'shutr_backend.wsgi.application'
-
+ASGI_APPLICATION = 'shutr_backend.asgi.application'
 # Redis as the channel layer
 CHANNEL_LAYERS = {
     'default': {
@@ -177,7 +178,7 @@ SECRET_ROOT= BASE_DIR / 'static'
 MEDIA_URL= 'media/'
 MEDIA_ROOT= BASE_DIR / 'media'
 
-SECRET_ROOT = BASE_DIR / 'static'
+#SECRET_ROOT = BASE_DIR / 'static'
 
 AUTHENTICATION_BACKENDS = [
     'social_core.backends.google.GoogleOAuth2',
@@ -209,9 +210,9 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
-CORS_ALLOWED_ORIGINS = [
-    "http://localhost:3000",  # Allow frontend requests
-]
+# CORS_ALLOWED_ORIGINS = [
+#     "http://localhost:3000",  # Allow frontend requests
+# ]
 REST_FRAMEWORK = {
     # Use Django's standard `django.contrib.auth` permissions,
     # or allow read-only access for unauthenticated users.
@@ -253,3 +254,18 @@ CORS_ALLOW_CREDENTIALS = True
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 AUTH_USER_MODEL = 'user.UserAccount'
+
+
+# Get the REDIRECT_URLS environment variable, defaulting to an empty string if not set
+REDIRECT_URLS = os.getenv('REDIRECT_URLS', '')
+
+# Ensure it's a list, avoiding issues if the variable is not set
+SOCIAL_AUTH_ALLOWED_REDIRECT_URIS = REDIRECT_URLS.split(',') if REDIRECT_URLS else []
+
+# Example usage in settings
+SOCIAL_AUTH_SETTINGS = {
+    'SOCIAL_AUTH_ALLOWED_REDIRECT_URIS': SOCIAL_AUTH_ALLOWED_REDIRECT_URIS
+}
+
+if not DEBUG and os.getenv("ENV") == "production":
+    ALLOWED_HOSTS.append("your-production-domain.com")
