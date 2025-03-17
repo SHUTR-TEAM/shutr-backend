@@ -45,6 +45,7 @@ def user_find_all(request):
     max_price = request.GET.get("maxPrice", "").strip()
     availability = request.GET.get("availability", "").strip()
     experienceLevel = request.GET.get("experienceLevel", "").strip()
+    sort_by = request.GET.get("sortBy", "").strip()
 
     filters = {}
 
@@ -84,6 +85,13 @@ def user_find_all(request):
         else:
             # Return all users when no filters are applied
             users_queryset = User.objects.all() 
+
+        if sort_by == "recent":
+            users_queryset = users_queryset.order_by("-created_at")
+            
+        elif sort_by == "popular":
+            users_queryset = users_queryset.order_by("-rating")
+
 
     except Exception as e:
         return JsonResponse({"error": str(e)}, status=500)
