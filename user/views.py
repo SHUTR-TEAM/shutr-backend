@@ -1,3 +1,4 @@
+from bson import ObjectId
 from django.conf import settings
 from django.views.decorators.csrf import csrf_exempt
 
@@ -140,3 +141,102 @@ def user_logout(request):
     response.delete_cookie('access')
     response.delete_cookie('refresh')
     return response
+
+
+@api_view(['GET'])
+@csrf_exempt
+@permission_classes([AllowAny])
+def user_find_all(request):
+    
+    #Extracts query parameters and saves them to variables
+    search = request.GET.get("q", "").strip()
+    style = request.GET.get('style', "").strip()
+    min_price = request.GET.get("minPrice", "").strip()
+    max_price = request.GET.get("maxPrice", "").strip()
+    availability = request.GET.get("availability", "").strip()
+    experienceLevel = request.GET.get("experienceLevel", "").strip()
+
+    filters = {}
+
+    #Builds a filter dictionary based on provided query parameters for searching and filtering users
+    if search:
+        filters["$or"] = [
+            {"name": {"$regex": search, "$options": "i"}},
+            {"tags": {"$regex": search, "$options": "i"}},
+            {"location": {"$regex": search, "$options": "i"}},
+        ]
+    
+    if style:
+        filters["tags"] = {"$regex": style, "$options": "i"}
+
+    if min_price and max_price:
+        filters["price"] = {"$gte": int(min_price), "$lte": int(max_price)}
+    elif min_price:
+        filters["price"] = {"$gte": int(min_price)}
+    elif max_price:
+        filters["price"] = {"$lte": int(max_price)}
+
+    if availability:
+        filters["availability"] = availability  
+
+    if experienceLevel:
+        filters["experience_level"] = {"$regex": experienceLevel, "$options": "i"}
+
+    try:
+        if filters:
+            #directly apply MongoDB's raw query filters.
+            users_queryset = User.objects(__raw__=filters)
+
+            # Return empty list when no results
+            if not users_queryset.count():
+                return Response([], status=status.HTTP_200_OK)
+        else:
+            # Return all users when no filters are applied
+            users_queryset = User.objects.all() 
+
+        serializer = UserSerializer(users_queryset, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+    
+    except Exception as e:
+        return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+    
+# Find a user by ID
+# GET /api/users/:user_id
+@api_view(['GET'])
+@csrf_exempt
+@permission_classes([AllowAny])
+def user_find_by_id(user_id):
+    try:
+        user = User.objects.get(id=ObjectId(user_id))
+        serializer = UserSerializer(user)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+    except User.DoesNotExist:
+        return Response({"error": "User not found"}, status=status.HTTP_404_NOT_FOUND)
+
+# Update a user by ID
+# POST /api/users/:user_id/update
+@api_view(['POST'])
+@csrf_exempt
+def user_update_by_id(request, user_id):
+    try:
+        user = User.objects.get(id=ObjectId(user_id))
+        serializer = UserSerializer(user, data=request.data, partial=True)
+        if serializer.is_valid():
+            user = serializer.save()
+            return Response({"message": "User updated successfully"}, status=status.HTTP_200_OK)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    except User.DoesNotExist:
+        return Response({"error": "User not found"}, status=status.HTTP_404_NOT_FOUND)
+
+# Delete a user by ID
+# POST /api/users/:user_id/delete
+@api_view(['GET'])
+@csrf_exempt
+def user_delete_by_id(user_id):
+    try:
+        user = User.objects.get(id=ObjectId(user_id))
+        user.delete()
+        return Response({"message": "User deleted successfully"}, status=status.HTTP_200_OK)
+    except User.DoesNotExist:
+        return Response({"error": "User not found"}, status=status.HTTP_404_NOT_FOUND)
+
