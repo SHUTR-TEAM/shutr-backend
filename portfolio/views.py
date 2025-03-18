@@ -4,7 +4,7 @@ from rest_framework.decorators import api_view, parser_classes
 from rest_framework.response import Response
 from rest_framework import status
 from .serializers import HeaderSerializer, GallerySerializer, ReviewSerializer
-from .models import Header, Gallery, GalleryFormat, Review
+from .models import Header, Gallery,  Review # ,GalleryFormat
 from bson import ObjectId
 from core.pagination import PaginationWithParams
 from rest_framework import viewsets
@@ -168,9 +168,7 @@ def header_delete_by_id(header_id):
 def gallery_create(request):
     serializer = GallerySerializer(data=request.data)
     if serializer.is_valid():
-
         gallery = serializer.save()
-
         return Response({"message": "gallery created", "gallery_id": str(gallery.id)}, status=status.HTTP_201_CREATED)
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
@@ -185,6 +183,93 @@ def gallery_find_all(request):
     paginated_galleries = paginator.paginate_queryset(galleries, request)
     serializer = GallerySerializer(paginated_galleries, many=True)
     return paginator.get_paginated_response(serializer.data)
+
+
+@api_view(['POST'])
+@csrf_exempt
+def gallery_create(request):
+    try:
+        # 1. Extract file, category, photographerID
+        # image_file = request.FILES.get("image")  # or whatever key you use
+        images = request.FILES.getlist("image")
+        # category = request.POST.get("category")
+        categories = request.POST.getlist("category")
+        photographer_id = request.POST.get("photographerID")
+        portfolio_id = request.POST.get("portfolioID")
+
+        if not images or not categories or not photographer_id:
+            return Response({"error": "Missing data (images, categories, photographerID)"}, status=status.HTTP_400_BAD_REQUEST)
+
+        # 2. Validate photographerID early
+        if not ObjectId.is_valid(photographer_id):
+            return Response({"error": "Invalid photographerID"}, status=status.HTTP_400_BAD_REQUEST)
+
+        #  Validate number of images and categories match
+        if len(images) != len(categories):
+            return Response({"error": "Mismatch between number of images and categories"}, status=status.HTTP_400_BAD_REQUEST)
+
+        
+        for img, category in zip(images, categories):
+            # 3. Save the file to media storage
+            file_path = f"gallery/{img.name}"
+            saved_path = default_storage.save(file_path, ContentFile(img.read()))
+
+            # 4. Build the URL to access the uploaded file
+            image_url = request.build_absolute_uri(settings.MEDIA_URL + saved_path)
+
+            # 5. Prepare data for the serializer
+            data = {
+                "photographerID": photographer_id,
+                "url": image_url,  # Pass the path we generated
+                "category": category,
+                "portfolioID": portfolio_id
+            }
+
+            # 6. Validate and save the serializer
+            serializer = GallerySerializer(data=data)
+            if serializer.is_valid():
+                gallery = serializer.save()
+                # return Response({"message": "Gallery created successfully", "gallery_id": str(gallery.id)}, status=status.HTTP_201_CREATED)
+            else:
+                return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+        return Response({"message": "Gallery created successfully"}, status=status.HTTP_201_CREATED)        
+
+    except Exception as e:
+        return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+# Find all photos(gallery) for a specific photographer
+# GET /api/galleries/photographer/:photographer_id
+@api_view(['GET'])
+@csrf_exempt
+def gallery_find_by_photographer(request, photographer_id):
+    try:
+        # 1. Find the photographer by ID
+        photographer = User.objects.get(id=ObjectId(photographer_id))
+        
+        # 2. Get all galleries that belong to this photographer
+        galleries = Gallery.objects.filter(photographer=photographer)
+        
+        # 3. Handle case where no galleries are found
+        # if not galleries:
+        #     return Response({"message": "No galleries found for this photographer"}, status=status.HTTP_404_NOT_FOUND)
+            # return Response({"message": "No galleries found for this photographer"})
+        
+        # 4. Serialize the galleries
+        serializer = GallerySerializer(galleries, many=True)
+        
+        # 5. Return the serialized data
+        return Response(serializer.data, status=status.HTTP_200_OK)
+    
+    except User.DoesNotExist:
+        return Response({"error": "Photographer not found"}, status=status.HTTP_404_NOT_FOUND)
+    
+    except Exception as e:
+        return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
+
+
 
 
 
@@ -267,30 +352,50 @@ def gallery_delete_by_id(request, gallery_id):
 
 # Delete a photo in gallery by ID and url        
 # POST /api/galleries/:gallery_id/delete_photo
+# @api_view(['POST'])
+# @csrf_exempt
+# def gallery_delete_photo(request, gallery_id):
+#     try:
+#         # Get the gallery object
+#         gallery = Gallery.objects.get(id=ObjectId(gallery_id))
+
+#         # Extract image URL from the request body
+#         image_url = request.data.get('image_url', None)
+
+#         if not image_url:
+#             return Response({"error": "No image URL provided"}, status=status.HTTP_400_BAD_REQUEST)
+
+#         # Find the image in the Gallery and remove it
+#         gallery.Gallery = [image for image in gallery.Gallery if image.url != image_url]
+
+#         # Save the updated gallery
+#         gallery.save()
+
+#         return Response({"message": "Photo deleted successfully"}, status=status.HTTP_200_OK)
+
+#     except Gallery.DoesNotExist:
+#         return Response({"error": "Gallery not found"}, status=status.HTTP_404_NOT_FOUND)
+
 @api_view(['POST'])
 @csrf_exempt
-def gallery_delete_photo(request, gallery_id):
+def gallery_delete_photo(request, participant_id):
     try:
-        # Get the gallery object
-        gallery = Gallery.objects.get(id=ObjectId(gallery_id))
-
         # Extract image URL from the request body
-        image_url = request.data.get('image_url', None)
+        image_url = request.data.get('image_url')
 
         if not image_url:
             return Response({"error": "No image URL provided"}, status=status.HTTP_400_BAD_REQUEST)
 
-        # Find the image in the Gallery and remove it
-        gallery.Gallery = [image for image in gallery.Gallery if image.url != image_url]
+        # Filter and delete the Gallery document with matching photographer and url
+        deleted_count = Gallery.objects(photographer=ObjectId(participant_id), url=image_url).delete()
 
-        # Save the updated gallery
-        gallery.save()
+        if deleted_count == 0:
+            return Response({"error": "Photo not found"}, status=status.HTTP_404_NOT_FOUND)
 
         return Response({"message": "Photo deleted successfully"}, status=status.HTTP_200_OK)
 
-    except Gallery.DoesNotExist:
-        return Response({"error": "Gallery not found"}, status=status.HTTP_404_NOT_FOUND)
-
+    except Exception as e:
+        return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
 # # Create a new review

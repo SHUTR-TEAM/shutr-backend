@@ -31,6 +31,7 @@ from .views import (
     gallery_update_by_id,
     gallery_delete_by_id,
     gallery_delete_photo,
+    gallery_find_by_photographer,
 
     review_create,
     review_find_all,
@@ -59,7 +60,9 @@ urlpatterns = [
     path('galleries/<str:gallery_id>', gallery_find_by_id),
     path('galleries/<str:gallery_id>/update', gallery_update_by_id),
     path('galleries/<str:gallery_id>/delete', gallery_delete_by_id),
-    path('galleries/<str:gallery_id>/delete_photo', gallery_delete_photo),
+    # path('galleries/<str:gallery_id>/delete_photo', gallery_delete_photo),
+    path('galleries/<str:participant_id>/delete_photo', gallery_delete_photo),
+    path('galleries/photographer/<str:photographer_id>/',gallery_find_by_photographer),
 
 
     path('reviews', review_find_all),
