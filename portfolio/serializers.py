@@ -1,7 +1,6 @@
 from rest_framework import serializers
 from bson import ObjectId
-#from .models import Header, Gallery, Review, ReviewFormat, GalleryFormat, Package  # Import your MongoEngine model
-from .models import Header, Gallery, Review,GalleryFormat #ReviewFormat, GalleryFormat
+from .models import Header, Gallery, Review 
 from core.serializers.user import UserSerializer
 import datetime
 
@@ -9,7 +8,6 @@ from rest_framework import serializers
 from bson import ObjectId
 from core.models.user import User  # Import User model
 from core.serializers.user import UserSerializer
-# from reviews.models import Review  # Import Review model
 
 from django.conf import settings
 from urllib.parse import urljoin
@@ -28,6 +26,49 @@ class ObjectIdField(serializers.Field):
         return ObjectId(data)
 
 
+
+
+class GallerySerializer(serializers.Serializer):
+    portfolioID = serializers.CharField()
+    photographerID = serializers.CharField(write_only=True)
+    url = serializers.CharField() 
+    category = serializers.CharField(max_length=20)
+
+    # Return full photographer objects when retrieving
+    photographer = UserSerializer(read_only=True)
+
+    def validate_photographerID(self, value):
+        """Validate and convert photographerID from string to ObjectId"""
+        if not ObjectId.is_valid(value):
+            raise serializers.ValidationError("Invalid ObjectId for photographerID")
+        return ObjectId(value)
+   
+    def create(self, validated_data):
+        """Create and return a new Gallery instance."""
+        photographer_id = validated_data.pop('photographerID')
+        photographer = User.objects(id=photographer_id).first()
+        
+        if not photographer:
+            raise serializers.ValidationError("Photographer not found")
+
+        gallery = Gallery.objects.create(photographer=photographer, **validated_data)
+        return gallery    
+
+    def update(self, instance, validated_data):
+        """Update and return an existing Gallery instance."""
+        if 'photographerID' in validated_data:
+            photographer = User.objects(id=validated_data.pop('photographerID')).first()
+            if not photographer:
+                raise serializers.ValidationError("Photographer not found")
+            instance.photographer = photographer
+        
+        for key, value in validated_data.items():
+            setattr(instance, key, value)
+        
+        instance.save()
+        return instance
+    
+
 class HeaderSerializer(serializers.Serializer): 
     """Custom serializer for the Header model."""
     
@@ -37,6 +78,9 @@ class HeaderSerializer(serializers.Serializer):
     # profile_image_url = serializers.CharField(max_length=255, allow_blank=True, required=False)
     Background_image_url = serializers.SerializerMethodField()
     profile_image_url = serializers.SerializerMethodField()
+    # images = GallerySerializer(many=True, read_only=True, source="*")
+    images = serializers.SerializerMethodField()
+
 
     description = serializers.CharField(max_length=1000, allow_blank=True, required=False)
 
@@ -69,167 +113,14 @@ class HeaderSerializer(serializers.Serializer):
         instance.save()
         return instance
 
-
-##
-# class GallerySerializer(serializers.Serializer):
-#        """Custom serializer for the Gallery model."""
-      
-#        id = ObjectIdField(read_only=True)
-#        photo_collection = serializers.ListField(child=serializers.URLField())
-
-#        def create(self, validated_data):
-#         """Create and return a new gallery instance."""
-#         return Gallery(**validated_data).save()
-
-#        def update(self, instance, validated_data):
-#             """Update and return an existing gallery instance."""
-#             for key, value in validated_data.items():
-#                 setattr(instance, key, value)
-#             #instance.updated_at = datetime.datetime.utcnow()
-#             instance.save()
-#             return instance
-##
-
-# class GalleryFormatSerializer(serializers.Serializer):
-#     url = serializers.URLField()
-#     catagory = serializers.CharField(max_length=20)
-
-
-# class GallerySerializer(serializers.Serializer):
-#     id = ObjectIdField(read_only=True)
-#     Gallery = GalleryFormatSerializer(many=True)  # Nested serializer for multiple reviews
-
-
-#     def create(self, validated_data):
-#         """Create and return a new Gallery instance."""
-#         gallery_data = validated_data.pop('Gallery', [])
-#         gallery_instances = [GalleryFormat(**gallery) for gallery in gallery_data]
-#         return Gallery(Gallery=gallery_instances).save()
-##
-    # def update(self, instance, validated_data):
-    #     """Update and return an existing Gallery instance."""
-    #     if "Gallery" in validated_data:
-    #         gallery_data = validated_data.pop("Gallery")
-    #         instance.Gallery = [GalleryFormat(**gallery) for gallery in gallery_data]
-##      
-
-    # def update(self, instance, validated_data):
-    #     """Update and return an existing Gallery instance."""
-    #     if "Gallery" in validated_data:
-    #         gallery_data = validated_data.pop("Gallery")
-    #         # Append new images to the existing list instead of replacing
-    #         for gallery_item in gallery_data:
-    #             instance.Gallery.append(GalleryFormat(**gallery_item))
-
-    #     for key, value in validated_data.items():
-    #         setattr(instance, key, value)
-
-    #     instance.save()
-    #     return instance
-
-
-
-class GalleryFormatSerializer(serializers.Serializer):
-    url = serializers.CharField()  # Store as a string instead of URL field
-    category = serializers.CharField(max_length=20)
-
-class GallerySerializer(serializers.Serializer):
-    id = ObjectIdField(read_only=True)
-    Gallery = GalleryFormatSerializer(many=True)  # Nested serializer for multiple images
-
-    def create(self, validated_data):
-        """Create and return a new Gallery instance."""
-        gallery_data = validated_data.pop('Gallery', [])
-        gallery_instances = [GalleryFormat(**gallery) for gallery in gallery_data]
-        return Gallery(Gallery=gallery_instances).save()
-
-    def update(self, instance, validated_data):
-        """Update and return an existing Gallery instance."""
-        if "Gallery" in validated_data:
-            gallery_data = validated_data.pop("Gallery")
-            for gallery_item in gallery_data:
-                instance.Gallery.append(GalleryFormat(**gallery_item))  # Append new images
-
-        for key, value in validated_data.items():
-            setattr(instance, key, value)
-
-        instance.save()
-        return instance
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-# class ReviewSerializer(serializers.Serializer):      
-#      id = ObjectIdField(read_only=True)  
-#      name = serializers.CharField(max_length=41)
-#      rating = serializers.FloatField(min_value=0.0, max_value=10.0)
-#      reviewText = serializers.CharField(max_length=1000)
-#      profile_image_url = serializers.CharField(max_length=255)
-
-
-#      def create(self, validated_data):
-#         """Create and return a new review instance."""
-#         return Review(**validated_data).save()
-
-#      def update(self, instance, validated_data):
-#             """Update and return an existing review instance."""
-#             for key, value in validated_data.items():
-#                 setattr(instance, key, value)
-#             #instance.updated_at = datetime.datetime.utcnow()
-#             instance.save()
-#             return instance
-
-
-
-
-# class ReviewSerializer(serializers.Serializer):      
-#      userID = serializers.CharField()  # Store sender ID as string
-#      user = UserSerializer()
-#      photographer = UserSerializer()
-#      photographerID = serializers.CharField()
-#      rating = serializers.FloatField(min_value=0.0, max_value=10.0)
-#      reviewText = serializers.CharField(max_length=1000)
-
-
-#      def validate_userID(self, value):
-#         """Convert userID from string to ObjectId before saving"""
-#         if not ObjectId.is_valid(value):
-#             raise serializers.ValidationError("Invalid ObjectId for userID")
-#         return ObjectId(value)  # Convert string to ObjectId
-
-#      def validate_photographerID(self, value):
-#         """Convert photographerID from string to ObjectId before saving"""
-#         if not ObjectId.is_valid(value):
-#             raise serializers.ValidationError("Invalid ObjectId for photographerID")
-#         return ObjectId(value)  # Convert string to ObjectId
-
-
-    
-#      def create(self, validated_data):
-#         """Create and return a new review instance."""
-#         return Review(**validated_data).save()
-
-#      def update(self, instance, validated_data):
-#             """Update and return an existing review instance."""
-#             for key, value in validated_data.items():
-#                 setattr(instance, key, value)
-#             #instance.updated_at = datetime.datetime.utcnow()
-#             instance.save()
-#             return instance
-
-
-
+    def get_images(self, obj):
+        # return Gallery.objects(portfolioID=obj)
+        # //print("===============================")
+        # galleries = Gallery.objects.filter(portfolioID=str(obj.id))  # Ensure matching ID format
+        # //return []
+        """Retrieve related galleries based on portfolioID."""
+        galleries = Gallery.objects.filter(portfolioID=str(obj.id))  # Ensure matching ID format
+        return GallerySerializer(galleries, many=True).data
 
 
 
@@ -293,81 +184,3 @@ class ReviewSerializer(serializers.Serializer):
 
         instance.save()
         return instance
-
-
-
-
-
-
-
-
-
-
-# class ReviewFormatSerializer(serializers.Serializer):
-#     ## name = serializers.CharField(max_length=41)
-#     ## profile_image_url = serializers.CharField(max_length=255)
-#     ## address = serializers.CharField(max_length=35)
-#     userID = serializers.CharField()  # Store sender ID as string
-#     photographerID = serializers.CharField()
-#     rating = serializers.FloatField(min_value=0.0, max_value=10.0)
-#     reviewText = serializers.CharField(max_length=1000)
-
-
-
-# class ReviewSerializer(serializers.Serializer):
-#     id = ObjectIdField(read_only=True)
-#     reviews = ReviewFormatSerializer(many=True)  # Nested serializer for multiple reviews
-
-#     def create(self, validated_data):
-#         """Create and return a new Review instance."""
-#         reviews_data = validated_data.pop('reviews', [])
-#         review_instances = [ReviewFormat(**review) for review in reviews_data]
-#         return Review(reviews=review_instances).save()
-
-#     def update(self, instance, validated_data):
-#         """Update and return an existing Review instance."""
-#         if "reviews" in validated_data:
-#             reviews_data = validated_data.pop("reviews")
-#             instance.reviews = [ReviewFormat(**review) for review in reviews_data]
-        
-#         for key, value in validated_data.items():
-#             setattr(instance, key, value)
-        
-#         instance.save()
-#         return instance
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-# class PackageSerializer(serializers.Serializer):
-#     id = ObjectIdField(read_only=True)
-#     title = serializers.CharField(max_length=255)
-#     price = serializers.CharField(max_length=50)
-#     description = serializers.CharField(max_length=1000)
-#     details = serializers.ListField(child=serializers.CharField())
-#     package_type = serializers.CharField(max_length=100)
-#     created_at = serializers.DateTimeField(read_only=True)
-#     updated_at = serializers.DateTimeField(read_only=True)
-
-#     def create(self, validated_data):
-#         return Package(**validated_data).save()
-
-#     def update(self, instance, validated_data):
-#         for key, value in validated_data.items():
-#             setattr(instance, key, value)
-#         instance.updated_at = datetime.datetime.utcnow()
-#         instance.save()
-#         return instance

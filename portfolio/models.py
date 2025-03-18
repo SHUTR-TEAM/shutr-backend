@@ -16,15 +16,19 @@ class Header(Document):
     #photo_collection = ReferenceField(Gallery, required=False)
 
 
+# This is gallery models
+# class GalleryFormat(EmbeddedDocument):
+#     url = StringField()  # Store file path instead of external URL
+#     category = StringField(max_length=20)
 
-class GalleryFormat(EmbeddedDocument):
-    url = StringField()  # Store file path instead of external URL
-    category = StringField(max_length=20)
+# class Gallery(Document):
+#     Gallery = ListField(EmbeddedDocumentField(GalleryFormat))
 
 class Gallery(Document):
-    Gallery = ListField(EmbeddedDocumentField(GalleryFormat))
-
-
+    photographer = ReferenceField('User', required=True)
+    portfolioID = ReferenceField('Header', required=True)
+    url = StringField()  # Store file path instead of external URL
+    category = StringField(max_length=20)
 
 # class GalleryFormat(EmbeddedDocument):
 #     url = URLField()
