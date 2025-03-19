@@ -38,6 +38,7 @@ def create_booking(request):
 # POST /api/bookings/accept
 @api_view(['POST'])
 @csrf_exempt
+@permission_classes([AllowAny]) 
 def accept_booking(request, booking_id):
     try:
         booking = Booking.objects.get(id=booking_id)
@@ -91,6 +92,7 @@ def accept_booking(request, booking_id):
 # GET /api/bookings
 @api_view(['GET'])
 @csrf_exempt
+@permission_classes([AllowAny]) 
 def booking_find_all(request):
     paginator = PaginationWithParams()
     bookings = Booking.objects.all()
@@ -103,6 +105,7 @@ def booking_find_all(request):
 # GET /api/bookings/:booking_id
 @api_view(['GET'])
 @csrf_exempt
+@permission_classes([AllowAny]) 
 def booking_find_by_id(request, booking_id):
     try:
         booking = Booking.objects.get(id=ObjectId(booking_id))
@@ -116,6 +119,7 @@ def booking_find_by_id(request, booking_id):
 # POST /api/bookings/:booking_id/update
 @api_view(['POST'])
 @csrf_exempt
+@permission_classes([AllowAny]) 
 def booking_update_by_id(request, booking_id):
     try:
         booking = Booking.objects.get(id=ObjectId(booking_id))
@@ -139,6 +143,7 @@ def booking_update_by_id(request, booking_id):
 # POST /api/bookings/:booking_id/delete
 @api_view(['POST'])
 @csrf_exempt
+@permission_classes([AllowAny]) 
 def booking_delete_by_id(request, booking_id):
     try:
         booking = Booking.objects.get(id=ObjectId(booking_id))
@@ -159,6 +164,7 @@ def booking_delete_by_id(request, booking_id):
 # GET /api/bookings/unavailable-dates
 @api_view(['GET'])
 @csrf_exempt
+@permission_classes([AllowAny]) 
 def booking_get_unavailable_dates(request):
     # Get all bookings and extract the booked dates
     booked_dates = Booking.objects.all().values('event.date')
