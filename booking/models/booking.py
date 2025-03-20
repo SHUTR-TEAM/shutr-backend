@@ -30,6 +30,9 @@ class Payment(EmbeddedDocument):
     balance_due = FloatField(default=0.0)
     payment_status = StringField(max_length=50, default="Pending")  # ["Pending", "Paid", "Overdue"]
 
+# To-Do Task Model
+class ToDo(EmbeddedDocument):
+    task = StringField(max_length=255, required=True)
 
 # Booking Model
 class Booking(Document):
@@ -41,7 +44,8 @@ class Booking(Document):
     # package = EmbeddedDocumentField(Package, required=False, allow_null=True)
     payment = EmbeddedDocumentField(Payment, required=False)
     status = StringField(max_length=50, default="Pending")  # ["Pending", "Confirmed", "Cancelled"]
-    additional_notes = StringField(max_length=512) 
+    additional_notes = StringField(max_length=512)
+    todos = ListField(EmbeddedDocumentField(ToDo), default=[])
     cancellation_policy_agreed = BooleanField(default=False)
     terms_and_conditions_agreed = BooleanField(default=False)
     created_at = DateTimeField(default=lambda: datetime.datetime.utcnow())  # Auto-set on creation
