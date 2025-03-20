@@ -96,23 +96,27 @@ def accept_booking(request, booking_id):
 def booking_find_all(request):
     paginator = PaginationWithParams()
     bookings = Booking.objects.all()
-    paginated_bookings = paginator.paginate_queryset(bookings, request)
-    serializer = BookingSerializer(paginated_bookings, many=True)
-    return paginator.get_paginated_response(serializer.data)
+    serializer = BookingSerializer(bookings, many=True)
+    return Response(serializer.data, status=status.HTTP_200_OK)
 
 
-# Find a booking by ID
-# GET /api/bookings/:booking_id
 @api_view(['GET'])
 @csrf_exempt
 @permission_classes([AllowAny]) 
 def booking_find_by_id(request, booking_id):
     try:
+        # Ensure valid ObjectId
+        if not ObjectId.is_valid(booking_id):
+            return JsonResponse({"error": "Invalid booking ID format"}, status=400)
+
         booking = Booking.objects.get(id=ObjectId(booking_id))
         serializer = BookingSerializer(booking)
         return Response(serializer.data, status=status.HTTP_200_OK)
     except Booking.DoesNotExist:
         return Response({"error": "Booking not found"}, status=status.HTTP_404_NOT_FOUND)
+    except Exception as e:
+        return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
 
 
 # Update a booking by ID
