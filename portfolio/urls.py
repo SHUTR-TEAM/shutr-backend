@@ -32,6 +32,11 @@ from .views import (
     gallery_delete_by_id,
     gallery_delete_photo,
     gallery_find_by_photographer,
+    package_create,
+    package_delete_by_id,
+    package_find_all,
+    package_find_by_id,
+    package_update_by_id,
 
     review_create,
     review_find_all,
@@ -44,7 +49,7 @@ from .views import (
 )
 
 # Initialize the router and register the viewset
-# router = DefaultRouter()
+router = DefaultRouter()
 # router.register(r'packages', PackageViewSet, basename="package")
 
 
@@ -73,7 +78,14 @@ urlpatterns = [
     # path('reviews/photographer/<str:review_id>',review_find_by_photographer)
     path('reviews/photographer/<str:photographer_id>/', review_find_by_photographer),
 
+    path('packages', package_find_all),
+    path('packages/create', package_create),
+    path('packages/<str:package_id>', package_find_by_id),
+    path('packages/<str:package_id>/update', package_update_by_id),
+    path('packages/<str:package_id>/delete', package_delete_by_id),
+    
+    # path('packages', get_packages, name='get_packages'),
+
 
     # path('', include(router.urls)),
-    # path('packages/', get_packages, name='get_packages'),
 ]

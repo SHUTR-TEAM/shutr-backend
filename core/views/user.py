@@ -9,11 +9,14 @@ from core.models.user import User
 from bson import ObjectId
 from core.pagination import PaginationWithParams
 from django.db.models import Q
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.permissions import AllowAny
 
 # Create a new user
 # POST /api/users/create
 @api_view(['POST'])
 @csrf_exempt
+@permission_classes([AllowAny]) 
 def user_create(request):
     serializer = UserSerializer(data=request.data)
     if serializer.is_valid():

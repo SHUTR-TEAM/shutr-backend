@@ -4,7 +4,7 @@ from rest_framework.decorators import api_view, parser_classes
 from rest_framework.response import Response
 from rest_framework import status
 from .serializers import HeaderSerializer, GallerySerializer, ReviewSerializer
-from .models import Header, Gallery,  Review # ,GalleryFormat
+from .models import Header, Gallery, Package,  Review # ,GalleryFormat
 from bson import ObjectId
 from core.pagination import PaginationWithParams
 from rest_framework import viewsets
@@ -549,3 +549,70 @@ def review_delete_by_id(request, review_id):
 #             return Response({"message": "Package deleted successfully"}, status=status.HTTP_204_NO_CONTENT)
 #         except Package.DoesNotExist:
 #             return Response({"error": "Package not found"}, status=status.HTTP_404_NOT_FOUND)
+
+
+# Create a new packages
+# POST /api/packages/create
+@api_view(['POST'])
+@csrf_exempt
+def package_create(request):
+    serializer = PackageSerializer(data=request.data)
+    if serializer.is_valid():
+        package = serializer.save()
+
+        return Response({"message": "package created", "review_id": str(package.id)}, status=status.HTTP_201_CREATED)
+    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+# Find all packages
+# GET /api/packages
+@api_view(['GET'])
+@csrf_exempt
+def package_find_all(request):
+    paginator = PaginationWithParams()
+    packages = Review.objects.all()
+    paginated_reviews = paginator.paginate_queryset(packages, request)
+    serializer = PackageSerializer(paginated_reviews, many=True)
+    return paginator.get_paginated_response(serializer.data)
+
+
+# Find a package by ID
+# GET /api/packages/:package_id
+@api_view(['GET'])
+@csrf_exempt
+def package_find_by_id(request, package_id):
+    try:
+        package = Package.objects.get(id=ObjectId(package_id))
+        serializer = ReviewSerializer(package)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+    except Package.DoesNotExist:
+        return Response({"error": "Package not found"}, status=status.HTTP_404_NOT_FOUND)
+
+
+# Update a package by ID
+# POST /api/packages/:package_id/update
+@api_view(['POST'])
+@csrf_exempt
+def package_update_by_id(request, package_id):
+    try:
+        package = Package.objects.get(id=ObjectId(package_id))
+        serializer = PackageSerializer(package, data=request.data, partial=True)
+        if serializer.is_valid():
+            package = serializer.save()
+            return Response({"message": "package updated successfully"}, status=status.HTTP_200_OK)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    except Package.DoesNotExist:
+        return Response({"error": "package not found"}, status=status.HTTP_404_NOT_FOUND)        
+
+
+# Delete a package by ID
+# POST /api/packages/:package_id/delete
+@api_view(['GET'])
+@csrf_exempt
+def package_delete_by_id(request, package_id):
+    try:
+        package = Package.objects.get(id=ObjectId(package_id))
+        package.delete()
+        return Response({"message": "package deleted successfully"}, status=status.HTTP_200_OK)
+    except Package.DoesNotExist:
+        return Response({"error": "package not found"}, status=status.HTTP_404_NOT_FOUND) 

@@ -65,6 +65,14 @@ class Review(Document):
     photographer = ReferenceField('User', required=True)
     rating = FloatField(min_value=0.0, max_value=10.0)
     reviewText = StringField(max_length=1000 )
+class Package(Document):
+    title = StringField(max_length=255, required=True)
+    price = StringField(max_length=50, required=True)
+    description = StringField(max_length=1000, required=True)
+    details = ListField(StringField(), required=True)
+    package_type = StringField(max_length=100, required=True)
+    created_at = DateTimeField(default=datetime.datetime.utcnow)
+    updated_at = DateTimeField(default=datetime.datetime.utcnow)
 
 
      

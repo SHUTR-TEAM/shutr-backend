@@ -2,25 +2,29 @@ import datetime
 from bson import ObjectId
 from httplib2 import Credentials
 from rest_framework import status
-from booking.models import Booking
+# from booking.models import Booking
 from django.http import JsonResponse
 from googleapiclient.discovery import build
 from rest_framework.response import Response
-from core.serializers import BookingSerializer
+# from core.serializers import BookingSerializer
 from rest_framework.decorators import api_view
 from google.auth.credentials import Credentials
+from booking.serializer import BookingSerializer
 from core.pagination import PaginationWithParams
 from google.auth.transport.requests import Request
 from django.views.decorators.csrf import csrf_exempt
 # from google_auth_oauthlib.flow import InstalledAppFlow
 from booking.google_calendar_integration import update_google_calendar_event, remove_google_calendar_event
-
+from .models.booking import Booking
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.permissions import AllowAny
 
 
 # Create a new booking
 # POST /api/bookings/create
 @api_view(['POST'])
 @csrf_exempt
+@permission_classes([AllowAny]) 
 def create_booking(request):
     # Deserialize and validate the incoming booking data
     serializer = BookingSerializer(data=request.data)
@@ -34,6 +38,7 @@ def create_booking(request):
 # POST /api/bookings/accept
 @api_view(['POST'])
 @csrf_exempt
+@permission_classes([AllowAny]) 
 def accept_booking(request, booking_id):
     try:
         booking = Booking.objects.get(id=booking_id)
@@ -87,31 +92,38 @@ def accept_booking(request, booking_id):
 # GET /api/bookings
 @api_view(['GET'])
 @csrf_exempt
+@permission_classes([AllowAny]) 
 def booking_find_all(request):
     paginator = PaginationWithParams()
     bookings = Booking.objects.all()
-    paginated_bookings = paginator.paginate_queryset(bookings, request)
-    serializer = BookingSerializer(paginated_bookings, many=True)
-    return paginator.get_paginated_response(serializer.data)
+    serializer = BookingSerializer(bookings, many=True)
+    return Response(serializer.data, status=status.HTTP_200_OK)
 
 
-# Find a booking by ID
-# GET /api/bookings/:booking_id
 @api_view(['GET'])
 @csrf_exempt
+@permission_classes([AllowAny]) 
 def booking_find_by_id(request, booking_id):
     try:
+        # Ensure valid ObjectId
+        if not ObjectId.is_valid(booking_id):
+            return JsonResponse({"error": "Invalid booking ID format"}, status=400)
+
         booking = Booking.objects.get(id=ObjectId(booking_id))
         serializer = BookingSerializer(booking)
         return Response(serializer.data, status=status.HTTP_200_OK)
     except Booking.DoesNotExist:
         return Response({"error": "Booking not found"}, status=status.HTTP_404_NOT_FOUND)
+    except Exception as e:
+        return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
 
 
 # Update a booking by ID
 # POST /api/bookings/:booking_id/update
 @api_view(['POST'])
 @csrf_exempt
+@permission_classes([AllowAny]) 
 def booking_update_by_id(request, booking_id):
     try:
         booking = Booking.objects.get(id=ObjectId(booking_id))
@@ -135,6 +147,7 @@ def booking_update_by_id(request, booking_id):
 # POST /api/bookings/:booking_id/delete
 @api_view(['POST'])
 @csrf_exempt
+@permission_classes([AllowAny]) 
 def booking_delete_by_id(request, booking_id):
     try:
         booking = Booking.objects.get(id=ObjectId(booking_id))
@@ -155,6 +168,7 @@ def booking_delete_by_id(request, booking_id):
 # GET /api/bookings/unavailable-dates
 @api_view(['GET'])
 @csrf_exempt
+@permission_classes([AllowAny]) 
 def booking_get_unavailable_dates(request):
     # Get all bookings and extract the booked dates
     booked_dates = Booking.objects.all().values('event.date')
