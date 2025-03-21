@@ -1,15 +1,16 @@
 from bson import ObjectId
 from django.conf import settings
+from django.core.exceptions import ObjectDoesNotExist
 from django.views.decorators.csrf import csrf_exempt
 
 from rest_framework import  status
 from rest_framework.response import Response
 from rest_framework.decorators import api_view, permission_classes
-from rest_framework.permissions import AllowAny
-from rest_framework_simplejwt.tokens import RefreshToken
+from rest_framework.permissions import AllowAny, IsAuthenticated
+from rest_framework_simplejwt.tokens import RefreshToken, AccessToken
 
-from user.models import User
-from .serializers import  PhotographerSerializer,  UserSerializer
+from user.models import Photographer, User
+from user.serializers import PhotographerSerializer, UserSerializer
 
 
 def set_token_cookies(response, access_token, refresh_token=None):
@@ -48,7 +49,21 @@ def user_signup(request):
 
     if serializer.is_valid():
         user = serializer.save()
-        return Response({"message": "User created", "user_id": str(user.id)}, status=status.HTTP_201_CREATED)
+
+        # Generate JWT tokens
+        refresh = RefreshToken.for_user(user)
+        access_token = str(refresh.access_token)
+
+        response = Response({
+            "message": "User created",
+            "access": access_token,
+            "refresh": str(refresh)
+        }, status=status.HTTP_201_CREATED)
+
+        # Set tokens in cookies
+        set_token_cookies(response, access_token, refresh)
+
+        return response
 
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
@@ -141,6 +156,38 @@ def user_logout(request):
     response.delete_cookie('access')
     response.delete_cookie('refresh')
     return response
+
+
+@api_view(['GET'])
+@csrf_exempt
+@permission_classes([AllowAny])
+# @permission_classes([IsAuthenticated])
+def get_user_from_token(request):
+    """Fetch user details based on the access token in cookies."""
+    access_token = request.COOKIES.get('access')
+
+    if not access_token:
+        return Response({"error": "Access token not provided in cookies"}, status=status.HTTP_401_UNAUTHORIZED)
+
+    try:
+        # Decode the token to get the user ID
+        decoded_token = AccessToken(access_token)
+        user_id = decoded_token["user_id"]
+
+        try:
+            user = User.objects.get(id=user_id)
+        except ObjectDoesNotExist:
+            # If not found in User, check the Photographer collection
+            user = Photographer.objects.get(id=user_id)
+
+        # Serialize and return user data
+        serializer = UserSerializer(user)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+    except ObjectDoesNotExist:
+        return Response({"error": "User not found"}, status=status.HTTP_404_NOT_FOUND)
+    except Exception as e:
+        return Response({"error": f"Invalid token or error occurred: {str(e)}"}, status=status.HTTP_401_UNAUTHORIZED)
 
 
 @api_view(['GET'])

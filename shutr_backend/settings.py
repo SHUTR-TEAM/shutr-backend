@@ -5,7 +5,6 @@ from pathlib import Path
 import os 
 from pathlib import Path
 from django.core.management.utils import get_random_secret_key
-import sys
 
 
 load_dotenv()
@@ -23,7 +22,6 @@ ALLOWED_HOSTS = [
     "localhost",
     "127.0.0.1"
 ]
-
 
 # Application definition
 INSTALLED_APPS = [
@@ -50,20 +48,12 @@ MIDDLEWARE = [
     'corsheaders.middleware.CorsMiddleware', 
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
-    'corsheaders.middleware.CorsMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
-
-
-CORS_ALLOWED_ORIGINS = [
-    "http://localhost:3000",  # Allow frontend to access the API
-]
-
-
 
 ROOT_URLCONF = 'shutr_backend.urls'
 
@@ -96,13 +86,11 @@ CHANNEL_LAYERS = {
 }
 
 # Dummy db for Django
-
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.dummy',
     }
 }
-
 
 # MongoDB Configuration
 MONGO_USERNAME = os.getenv('MONGO_USERNAME')
@@ -113,8 +101,6 @@ MONGO_CLUSTER_NAME = os.getenv('MONGO_CLUSTER_NAME')
 
 MONGO_URI = f"mongodb+srv://{MONGO_USERNAME}:{MONGO_PASSWORD}@{MONGO_CLUSTER_URL}/{MONGO_DB_NAME}?retryWrites=true&w=majority&appName={MONGO_CLUSTER_NAME}"
 
-# client = AsyncIOMotorClient(MONGO_URI)
-# db = client[MONGO_DB_NAME]
 client = AsyncIOMotorClient(MONGO_URI)
 db = client[MONGO_DB_NAME]
 
@@ -127,12 +113,9 @@ DEFAULT_FROM_EMAIL= os.getenv('AWS_SES_FROM_EMAIL')
 
 AWS_SES_ACCESS_KEY_ID = os.getenv('AWS_SES_ACCESS_KEY_ID')
 AWS_SES_SECRET_ACCESS_KEY = os.getenv('AWS_SES_SECRET_ACCESS_KEY')
-# Additionally, if you are not using the default AWS region of us-east-1,
-# you need to specify a region, like so:
 AWS_SES_REGION_NAME = os.getenv('AWS_SES_REGION_NAME')
 AWS_SES_REGION_ENDPOINT = f'email.{AWS_SES_REGION_NAME}.amazonaws.com'
 AWS_SES_FROM_EMAIL = os.getenv('AWS_SES_FROM_EMAIL')
-# If you want to use the SESv2 client
 USE_SES_V2 = True
 
 DOMAIN= os.getenv('DOMAIN')
@@ -190,31 +173,10 @@ AUTHENTICATION_BACKENDS = [
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-# # AWS S3 Configuration
-# AWS_ACCESS_KEY_ID = 'your-aws-access-key-id'
-# AWS_SECRET_ACCESS_KEY = 'your-aws-secret-access-key'
-# AWS_STORAGE_BUCKET_NAME = 'your-bucket-name'
-# AWS_S3_REGION_NAME = 'your-region'  # e.g. 'us-east-1'
-
-
-
-# # Use S3 for storing static files
-# DEFAULT_FILE_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'
-
-# # Optional: Configure the base URL to use for the S3 files
-# AWS_S3_CUSTOM_DOMAIN = f"{AWS_STORAGE_BUCKET_NAME}.s3.amazonaws.com"
-
-
-
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
-CORS_ALLOWED_ORIGINS = [
-    "http://localhost:3000",  # Allow frontend requests
-]
 REST_FRAMEWORK = {
-    # Use Django's standard `django.contrib.auth` permissions,
-    # or allow read-only access for unauthenticated users.
     'DEFAULT_AUTHENTICATION_CLASSES':[
         'rest_framework_simplejwt.authentication.JWTAuthentication',
         ],
@@ -236,10 +198,10 @@ DJOSER= {
 
 AUTH_COOKIE = 'access'
 AUTH_COOKIE_MAX_AGE = 60 * 60 * 24
-AUTH_COOKIE_SECURE = os.getenv('AUTH_COOKIE_SECURE', 'True') == 'True'
+AUTH_COOKIE_SECURE = False
 AUTH_COOKIE_HTTP_ONLY = True
 AUTH_COOKIE_PATH = '/'
-AUTH_COOKIE_SAMESITE = 'None'
+AUTH_COOKIE_SAMESITE = 'Lax'
 
 SOCIAL_AUTH_GOOGLE_OAUTH2_KEY = os.getenv('GOOGLE_AUTH_KEY')
 SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET = os.getenv('GOOGLE_AUTH_SECRET_KEY')
@@ -257,15 +219,18 @@ SOCIAL_AUTH_FACEBOOK_PROFILE_EXTRA_PARAMS = {
     'fields': 'email, first_name, last_name'
 }
 
-
-CORS_ALLOWED_ORIGINS = os.getenv(
-    'CORS_ALLOWED_ORIGINS',
-    'http://localhost:3000,http://127.0.0.1:3000'
-).split(',')
 CORS_ALLOW_CREDENTIALS = True
+CORS_ALLOWED_ORIGINS = [
+    "http://localhost:3000",
+    "http://127.0.0.1:3000",
+]
+CSRF_TRUSTED_ORIGINS = [
+    "http://localhost:3000",
+    "http://127.0.0.1:3000",
+]
+
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
-# AUTH_USER_MODEL = 'user.User'
