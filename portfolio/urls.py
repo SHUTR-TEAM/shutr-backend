@@ -32,11 +32,14 @@ from .views import (
     gallery_delete_by_id,
     gallery_delete_photo,
     gallery_find_by_photographer,
+
+
     package_create,
     package_delete_by_id,
     package_find_all,
     package_find_by_id,
     package_update_by_id,
+    package_find_by_photographerid,
 
     review_create,
     review_find_all,
@@ -86,6 +89,7 @@ urlpatterns = [
     path('packages', package_find_all),
     path('packages/create', package_create),
     path('packages/<str:package_id>', package_find_by_id),
+    path('packages/photographer/<str:photographer_id>', package_find_by_photographerid),
     path('packages/<str:package_id>/update', package_update_by_id),
     path('packages/<str:package_id>/delete', package_delete_by_id),
     

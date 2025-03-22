@@ -1,13 +1,23 @@
+
+
+
+
+
+
+
+
+# ###
+
 from rest_framework import serializers
 from bson import ObjectId
+
+from user.models import User
+from user.serializers import UserSerializer
 from .models import Header, Gallery, Package, Review, SocialLinks
-from core.serializers.user import UserSerializer
 import datetime
 
 from rest_framework import serializers
 from bson import ObjectId
-from core.models.user import User  # Import User model
-from core.serializers.user import UserSerializer
 
 from django.conf import settings
 from urllib.parse import urljoin
@@ -188,22 +198,131 @@ class ReviewSerializer(serializers.Serializer):
         return instance
 
 
+# class PackageSerializer(serializers.Serializer):
+#     id = ObjectIdField(read_only=True)
+#     title = serializers.CharField(max_length=255)
+#     price = serializers.CharField(max_length=50)
+#     description = serializers.CharField(max_length=1000)
+#     details = serializers.ListField(child=serializers.CharField())
+#     created_at = serializers.DateTimeField(read_only=True)
+#     updated_at = serializers.DateTimeField(read_only=True)
+
+#     def create(self, validated_data):
+#         return Package(**validated_data).save()
+
+#     def update(self, instance, validated_data):
+#         for key, value in validated_data.items():
+#             setattr(instance, key, value)
+            
+#         instance.updated_at = datetime.datetime.utcnow()
+#         instance.save()
+#         return instance
+
+
+# class PackageSerializer(serializers.Serializer):
+#     id = serializers.CharField(read_only=True)  # MongoDB ObjectId as string
+    
+#     # Accept only user ID when creating/updating
+#     userID = serializers.CharField(write_only=True)
+
+#     # Return full user object when retrieving
+#     user = UserSerializer(read_only=True)
+    
+#     title = serializers.CharField(max_length=255)
+#     price = serializers.CharField(max_length=50)
+#     description = serializers.CharField(max_length=1000)
+#     details = serializers.ListField(child=serializers.CharField())
+
+#     created_at = serializers.DateTimeField(read_only=True)
+#     updated_at = serializers.DateTimeField(read_only=True)
+
+#     def validate_userID(self, value):
+#         """Validate and convert userID from string to ObjectId"""
+#         if not ObjectId.is_valid(value):
+#             raise serializers.ValidationError("Invalid ObjectId for userID")
+#         return ObjectId(value)  # Convert string to ObjectId
+
+#     def create(self, validated_data):
+#         """Create and return a new Package instance."""
+#         user_id = validated_data.pop('userID')
+
+#         # Fetch User object
+#         user = User.objects(id=user_id).first()
+#         if not user:
+#             raise serializers.ValidationError("User not found")
+
+#         package = Package.objects.create(user=user, **validated_data)
+#         return package
+
+#     def update(self, instance, validated_data):
+#         """Update and return an existing Package instance."""
+#         if 'userID' in validated_data:
+#             user = User.objects(id=validated_data.pop('userID')).first()
+#             if not user:
+#                 raise serializers.ValidationError("User not found")
+#             instance.user = user
+
+#         for key, value in validated_data.items():
+#             setattr(instance, key, value)
+
+#         instance.updated_at = datetime.datetime.utcnow()
+#         instance.save()
+#         return instance
+
+
 class PackageSerializer(serializers.Serializer):
-    id = ObjectIdField(read_only=True)
+    id = serializers.CharField(read_only=True)  # MongoDB ObjectId as string
+    
+    # Accept only user ID when creating/updating
+    userID = serializers.CharField(write_only=True)
+
+    # Return full user object when retrieving
+    user = UserSerializer(read_only=True)
+    
     title = serializers.CharField(max_length=255)
     price = serializers.CharField(max_length=50)
     description = serializers.CharField(max_length=1000)
     details = serializers.ListField(child=serializers.CharField())
+
     created_at = serializers.DateTimeField(read_only=True)
     updated_at = serializers.DateTimeField(read_only=True)
 
+    def validate_userID(self, value):
+        """Validate and convert userID from string to ObjectId"""
+        if not ObjectId.is_valid(value):
+            raise serializers.ValidationError("Invalid ObjectId for userID")
+        # return ObjectId(value)  # Convert string to ObjectId
+
+        user = User.objects(id=value).first()  # Fetch user
+        if not user:
+            raise serializers.ValidationError("User not found")
+
+        return user  
+
     def create(self, validated_data):
-        return Package(**validated_data).save()
+        """Create and return a new Package instance."""
+        user = validated_data.pop('userID')
+
+        # Fetch User document instead of passing ObjectId
+        # user = User.objects(id=user_id).first()
+        # if not user:
+        #     raise serializers.ValidationError("User not found")
+
+        # Create the package with the User document
+        package = Package.objects.create(user=user, **validated_data)
+        return package
 
     def update(self, instance, validated_data):
+        """Update and return an existing Package instance."""
+        if 'userID' in validated_data:
+            user = User.objects(id=validated_data.pop('userID')).first()
+            if not user:
+                raise serializers.ValidationError("User not found")
+            instance.user = user  # Assign User document, not ObjectId
+
         for key, value in validated_data.items():
             setattr(instance, key, value)
-            
+
         instance.updated_at = datetime.datetime.utcnow()
         instance.save()
         return instance

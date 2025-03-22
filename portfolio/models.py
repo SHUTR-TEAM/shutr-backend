@@ -65,7 +65,10 @@ class Review(Document):
     photographer = ReferenceField('User', required=True)
     rating = FloatField(min_value=0.0, max_value=10.0)
     reviewText = StringField(max_length=1000 )
+
+    
 class Package(Document):
+    user = ReferenceField('User', required=True) 
     title = StringField(max_length=255, required=True)
     price = StringField(max_length=50, required=True)
     description = StringField(max_length=1000, required=True)

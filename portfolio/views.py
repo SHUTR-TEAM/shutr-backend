@@ -548,7 +548,7 @@ def package_create(request):
     if serializer.is_valid():
         package = serializer.save()
 
-        return Response({"message": "package created", "review_id": str(package.id)}, status=status.HTTP_201_CREATED)
+        return Response({"message": "package created", "package_id": str(package.id)}, status=status.HTTP_201_CREATED)
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
@@ -567,16 +567,54 @@ def package_find_all(request):
 
 # Find a package by ID
 # GET /api/packages/:package_id
+# @api_view(['GET'])
+# @csrf_exempt
+# @permission_classes([AllowAny])
+# def package_find_by_id(request, package_id):
+#     try:
+#         package = Package.objects.get(id=ObjectId(package_id))
+#         serializer = ReviewSerializer(package)
+#         return Response(serializer.data, status=status.HTTP_200_OK)
+#     except Package.DoesNotExist:
+#         return Response({"error": "Package not found"}, status=status.HTTP_404_NOT_FOUND)
+
+
 @api_view(['GET'])
-@csrf_exempt
 @permission_classes([AllowAny])
 def package_find_by_id(request, package_id):
     try:
-        package = Package.objects.get(id=ObjectId(package_id))
-        serializer = ReviewSerializer(package)
+        package = Package.objects.filter(id=ObjectId(package_id)).first()
+        if not package:
+            return Response({"error": "Package not found"}, status=status.HTTP_404_NOT_FOUND)
+
+        serializer = PackageSerializer(package)
         return Response(serializer.data, status=status.HTTP_200_OK)
-    except Package.DoesNotExist:
-        return Response({"error": "Package not found"}, status=status.HTTP_404_NOT_FOUND)
+    except Exception as e:
+        return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
+
+
+@api_view(['GET'])
+@permission_classes([AllowAny])
+def package_find_by_photographerid(request, photographer_id):
+    try:
+        photographer = User.objects.get(id=ObjectId(photographer_id))
+        packages = Package.objects.filter(photographer=photographer)
+
+        if not packages:
+            return Response({"message": "No packages found for this photographer"}, status=status.HTTP_404_NOT_FOUND)
+
+        serializer = PackageSerializer(packages, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+    except User.DoesNotExist:
+        return Response({"error": "Photographer not found"}, status=status.HTTP_404_NOT_FOUND)
+    except Exception as e:
+        return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
+
+
+
+
 
 
 # Update a package by ID

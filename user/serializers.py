@@ -1,9 +1,20 @@
+from bson import ObjectId
 from rest_framework import serializers
 
-from portfolio.serializers import HeaderSerializer
+# from portfolio.serializers import HeaderSerializer
 from .models import User, Photographer
 
+class ObjectIdField(serializers.Field):
+    def to_representation(self, value):
+        return str(value)
+
+    def to_internal_value(self, data):
+        if not ObjectId.is_valid(data):
+            raise serializers.ValidationError("Invalid ObjectId")
+        return ObjectId(data)
+
 class UserSerializer(serializers.Serializer):
+    id = ObjectIdField(read_only=True)
     email = serializers.EmailField()
     password = serializers.CharField(write_only=True)
 
@@ -35,7 +46,7 @@ class UserSerializer(serializers.Serializer):
 
 
 class PhotographerSerializer(UserSerializer):
-    portfolio = HeaderSerializer()
+    # portfolio = HeaderSerializer()
     verified = serializers.BooleanField(default=False)
 
     def create(self, validated_data):
