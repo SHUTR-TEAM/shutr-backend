@@ -1,6 +1,8 @@
-import datetime
+from datetime import datetime
+from datetime import timedelta
 from bson import ObjectId
-from httplib2 import Credentials
+# from httplib2 import Credentials
+from google.oauth2.credentials import Credentials
 from rest_framework import status
 # from booking.models import Booking
 from django.http import JsonResponse
@@ -8,13 +10,14 @@ from googleapiclient.discovery import build
 from rest_framework.response import Response
 # from core.serializers import BookingSerializer
 from rest_framework.decorators import api_view
-from google.auth.credentials import Credentials
+# from google.auth.credentials import Credentials
 from booking.serializer import BookingSerializer
 from core.pagination import PaginationWithParams
 from google.auth.transport.requests import Request
 from django.views.decorators.csrf import csrf_exempt
 # from google_auth_oauthlib.flow import InstalledAppFlow
 from booking.google_calendar_integration import update_google_calendar_event, remove_google_calendar_event
+from user.models import User
 from .models.booking import Booking
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import AllowAny
@@ -45,12 +48,16 @@ def accept_booking(request, booking_id):
         if booking.status != "Pending":
             return Response({"error": "Booking already confirmed or cancelled"}, status=status.HTTP_400_BAD_REQUEST)
 
-        photographer = booking.photographer
+        photographer = User.objects.get(id=ObjectId("67dd71aee5948704445e32f0"))
+        # photographer = booking.photographer
         # Retrieve the photographer's credentials from the database
         credentials = Credentials(
             token=photographer.google_access_token,
-            refresh_token=photographer.google_refresh_token,
-            token_expiry=photographer.google_token_expiry
+            refresh_token=photographer.refresh_token,
+            expiry=datetime.strptime(photographer.google_token_expiry, '%Y-%m-%dT%H:%M:%S.%f'),
+            token_uri='https://oauth2.googleapis.com/token',  # Google OAuth2 token URI
+            client_id="35440314571-ktdqppuvs0a53fan7f7tfsa4ch76m6bi.apps.googleusercontent.com",        # Your client ID
+            client_secret="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",
         )
 
         # If the token is expired, refresh it
@@ -59,20 +66,30 @@ def accept_booking(request, booking_id):
 
         # Update the booking status
         booking.status = "Confirmed"
+        booking.photographer_id = ObjectId("67dd71aee5948704445e32f0")
+        booking.client_id = ObjectId("67dd71aee5948704445e32f0")
         booking.save()
 
         # Create the event in the photographer's Google Calendar
         service = build('calendar', 'v3', credentials=credentials)
+        
+        # Assuming booking.event.date is in string format like 'YYYY-MM-DD HH:MM:SS'
+        start_time = datetime.strptime(booking.event.date, '%Y-%m-%d')
+
+        # Calculate end time (assuming event duration is 5 hours)
+        end_time = start_time + timedelta(hours=5)
+
+        # Prepare the event data
         event = {
-            'summary': booking.event.name,
-            'location': booking.event.venue.address,
+            'summary': booking.event.type,
+            'location': booking.event.address,
             'description': 'Event for photography booking',
             'start': {
-                'dateTime': booking.event.date,
-                'timeZone': 'America/New_York',  # Use the correct time zone
+                'dateTime': start_time.isoformat(),  # Convert start_time to ISO format
+                'timeZone': 'America/New_York',
             },
             'end': {
-                'dateTime': booking.event.date + datetime.timedelta(hours=booking.event.expected_guests),
+                'dateTime': end_time.isoformat(),  # Convert end_time to ISO format
                 'timeZone': 'America/New_York',
             },
             'attendees': [

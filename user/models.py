@@ -18,6 +18,10 @@ class User(Document):
     role = StringField(choices=["user", "photographer"], default="user")
     is_active = BooleanField(default=True)
 
+    google_access_token= StringField(max_length=255, required=False)
+    refresh_token = StringField(max_length=255, required=False)
+    google_token_expiry = StringField(max_length=255, required=False)
+
     created_at = DateTimeField(default=lambda: datetime.datetime.utcnow())
     updated_at = DateTimeField(default=lambda: datetime.datetime.utcnow())
 
@@ -33,7 +37,7 @@ class User(Document):
         return check_password(raw_password, self.password)
 
     def __str__(self):
-        return f"{self.full_name} ({self.email})"
+        return f"{self.first_name} ({self.email})"
 
 class Photographer(User):
     portfolio = ReferenceField('Header', required=False)

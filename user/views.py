@@ -1,5 +1,10 @@
+import os
+import datetime
+
 from bson import ObjectId
 from django.conf import settings
+from django.http import JsonResponse
+from django.shortcuts import render, redirect
 from django.core.exceptions import ObjectDoesNotExist
 from django.views.decorators.csrf import csrf_exempt
 
@@ -11,6 +16,9 @@ from rest_framework_simplejwt.tokens import RefreshToken, AccessToken
 
 from user.models import Photographer, User
 from user.serializers import PhotographerSerializer, UserSerializer
+
+from google_auth_oauthlib.flow import Flow
+from googleapiclient.discovery import build
 
 
 def set_token_cookies(response, access_token, refresh_token=None):
@@ -149,6 +157,7 @@ def verify_token(request):
 
 # Logout (Clear Cookies)
 @api_view(['POST'])
+@permission_classes([AllowAny]) 
 @csrf_exempt
 def user_logout(request):
     """Logs out user by clearing JWT cookies."""
@@ -287,3 +296,159 @@ def user_delete_by_id(user_id):
     except User.DoesNotExist:
         return Response({"error": "User not found"}, status=status.HTTP_404_NOT_FOUND)
 
+
+CLIENT_SECRETS_FILE = "client_secret.json" 
+SCOPES = ['https://www.googleapis.com/auth/calendar']
+REDIRECT_URI = 'http://localhost:3000/google-auth-callback' 
+
+# Google Calendar Integration
+# GET /auth/google_calendar/init
+@api_view(['GET'])
+@csrf_exempt
+@permission_classes([AllowAny])
+def google_calendar_init(request):
+    access_token = request.COOKIES.get('access')
+
+    if not access_token:
+        return Response({"error": "Access token not provided in cookies"}, status=status.HTTP_401_UNAUTHORIZED)
+
+    try:
+        # Decode the token to get the user ID
+        decoded_token = AccessToken(access_token)
+        user_id = decoded_token["user_id"]
+
+        try:
+            user = User.objects.get(id=user_id)
+        except ObjectDoesNotExist:
+            # If not found in User, check the Photographer collection
+            user = Photographer.objects.get(id=user_id)
+
+        if os.path.exists(CLIENT_SECRETS_FILE):
+            print("File exists")
+        else:
+            print("File does not exist")
+
+        flow = Flow.from_client_secrets_file(
+            CLIENT_SECRETS_FILE,
+            scopes=SCOPES,
+            redirect_uri=REDIRECT_URI
+        )
+        
+        # Generate the authorization URL
+        state = f"user_id:{user.id}"
+        authorization_url, _ = flow.authorization_url(
+            access_type='offline',
+            include_granted_scopes='true',
+            prompt='consent',
+            state=state
+        )
+
+        # Redirect the user to the Google authorization URL
+        # return redirect(authorization_url)
+        return Response({'authorization_url': authorization_url}, status=status.HTTP_200_OK)
+
+    except ObjectDoesNotExist:
+        return Response({"error": "User not found"}, status=status.HTTP_404_NOT_FOUND)
+    except Exception as e:
+        return Response({"error": f"Invalid token or error occurred: {str(e)}"}, status=status.HTTP_401_UNAUTHORIZED)
+
+
+@api_view(['GET'])
+@permission_classes([AllowAny])
+def google_auth_callback(request):
+    """Callback handler for the OAuth2 response."""
+    # Get state from query params
+    state = request.query_params.get('state', '')
+    
+    # Extract user_id from state
+    if not state.startswith('user_id:'):
+        return Response({'error': 'Invalid state parameter'}, status=status.HTTP_400_BAD_REQUEST)
+    
+    user_id = state.split('user_id:')[1]
+    
+    try:
+        user = User.objects.get(id=user_id)
+    except User.DoesNotExist:
+        return Response({'error': 'User not found'}, status=status.HTTP_404_NOT_FOUND)
+    
+    # Create flow instance with same parameters as in google_calendar_init
+    flow = Flow.from_client_secrets_file(
+        CLIENT_SECRETS_FILE,
+        scopes=SCOPES,
+        redirect_uri=REDIRECT_URI,
+    )
+    
+    # Process the authorization response
+    # Need to convert to standard HttpRequest build_absolute_uri
+    authorization_response = request._request.build_absolute_uri()
+    flow.fetch_token(authorization_response=authorization_response)
+    
+    # Get credentials from flow
+    credentials = flow.credentials
+    
+    # Store tokens in the database
+    user.google_access_token = credentials.token
+    user.refresh_token = credentials.refresh_token
+    user.google_token_expiry = credentials.expiry.isoformat()
+    user.save()
+
+    serializer = UserSerializer(data=user)
+    if serializer.is_valid():
+        saved_user = serializer.save()
+    
+    # Return success response
+    return Response({
+        'success': True,
+        'message': 'Google Calendar connected successfully'
+    })
+
+
+# def list_calendar_events(request):
+#     """View to list Google Calendar events for the authenticated user."""
+#     user = request.user
+    
+#     # Check if the user has connected their Google Calendar
+#     if not user.google_access_token:
+#         return redirect('google_calendar_init')
+    
+#     # Create credentials object
+#     from google.oauth2.credentials import Credentials
+    
+#     credentials = Credentials(
+#         token=user.google_access_token,
+#         refresh_token=user.refresh_token,
+#         token_uri="https://oauth2.googleapis.com/token",
+#         client_id=settings.GOOGLE_CLIENT_ID,
+#         client_secret=settings.GOOGLE_CLIENT_SECRET,
+#         scopes=SCOPES
+#     )
+    
+#     # Check if token is expired and needs refreshing
+#     expiry = datetime.datetime.fromisoformat(user.google_token_expiry)
+#     if expiry <= datetime.datetime.utcnow():
+#         # Token expired, refresh it
+#         from google.auth.transport.requests import Request
+#         credentials.refresh(Request())
+        
+#         # Update the stored tokens
+#         user.google_access_token = credentials.token
+#         user.google_token_expiry = credentials.expiry.isoformat()
+#         user.save()
+    
+#     # Build the Calendar service
+#     service = build('calendar', 'v3', credentials=credentials)
+    
+#     # Get calendar events
+#     events_result = service.events().list(
+#         calendarId='primary',
+#         timeMin=datetime.datetime.utcnow().isoformat() + 'Z',
+#         maxResults=10,
+#         singleEvents=True,
+#         orderBy='startTime'
+#     ).execute()
+    
+#     events = events_result.get('items', [])
+    
+#     return render(request, 'calendar_events.html', {
+#         'events': events
+#     })

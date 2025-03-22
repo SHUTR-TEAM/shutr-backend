@@ -17,6 +17,10 @@ class UserSerializer(serializers.Serializer):
     role = serializers.ChoiceField(choices=["user", "photographer"], default="user")
     is_active = serializers.BooleanField(default=True)
 
+    google_access_token= serializers.CharField(max_length=255, required=False)
+    refresh_token = serializers.CharField(max_length=255, required=False)
+    google_token_expiry = serializers.CharField(max_length=255, required=False)
+
     def create(self, validated_data):
         role = validated_data.pop("role", "user")
 

@@ -46,6 +46,7 @@ INSTALLED_APPS = [
 ]
 
 MIDDLEWARE = [
+    'corsheaders.middleware.CorsMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -234,3 +235,9 @@ CSRF_TRUSTED_ORIGINS = [
 # https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+GOOGLE_CLIENT_ID = '35440314571-ktdqppuvs0a53fan7f7tfsa4ch76m6bi.apps.googleusercontent.com'
+GOOGLE_CLIENT_SECRET = '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' 
+
+import os
+os.environ["OAUTHLIB_INSECURE_TRANSPORT"] = "1"
