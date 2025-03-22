@@ -105,14 +105,83 @@ def accept_booking(request, booking_id):
     except Booking.DoesNotExist:
         return Response({"error": "Booking not found"}, status=status.HTTP_404_NOT_FOUND)
 
-# Find all bookings
-# GET /api/bookings
+# # Find all bookings
+# # GET /api/bookings
+# @api_view(['GET'])
+# @csrf_exempt
+# @permission_classes([AllowAny]) 
+# def booking_find_all(request):
+#     paginator = PaginationWithParams()
+#     bookings = Booking.objects.all()
+#     serializer = BookingSerializer(bookings, many=True)
+#     return Response(serializer.data, status=status.HTTP_200_OK)
+
+
 @api_view(['GET'])
 @csrf_exempt
-@permission_classes([AllowAny]) 
+@permission_classes([AllowAny])
 def booking_find_all(request):
-    paginator = PaginationWithParams()
+    # Get query parameters
+    photographer_id = request.query_params.get('photographer_id', None)
+    month = request.query_params.get('month', None)
+    year = request.query_params.get('year', None)
+    
+    # Start with all bookings
     bookings = Booking.objects.all()
+    
+    # Apply filters if provided
+    if photographer_id:
+        bookings = bookings.filter(photographer_id=photographer_id)
+    
+    # Filter by month and year if provided
+    if month and year:
+        # Convert to integers
+        try:
+            month_int = int(month)
+            year_int = int(year)
+            
+            # Since event.date is a StringField, we need to use regex to match
+            # Assuming event.date format contains year and month (e.g., "2025-03-15")
+            # This regex pattern looks for year-month at the beginning of the date string
+            date_pattern = f"^{year_int}-{month_int:02d}"
+            bookings = bookings.filter(event__date__regex=date_pattern)
+        except ValueError:
+            # Handle invalid month or year values
+            return Response(
+                {"error": "Invalid month or year format"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+    elif month:
+        # Filter by month only
+        try:
+            month_int = int(month)
+            # Match month part in date string (assumes format like "YYYY-MM-DD")
+            date_pattern = f"-{month_int:02d}-"
+            bookings = bookings.filter(event__date__regex=date_pattern)
+        except ValueError:
+            return Response(
+                {"error": "Invalid month format"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+    elif year:
+        # Filter by year only
+        try:
+            year_int = int(year)
+            # Match year part in date string
+            date_pattern = f"^{year_int}-"
+            bookings = bookings.filter(event__date__regex=date_pattern)
+        except ValueError:
+            return Response(
+                {"error": "Invalid year format"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+    
+    # Use pagination if needed
+    # paginator = PaginationWithParams()
+    # result_page = paginator.paginate_queryset(bookings, request)
+    # serializer = BookingSerializer(result_page, many=True)
+    # return paginator.get_paginated_response(serializer.data)
+
     serializer = BookingSerializer(bookings, many=True)
     return Response(serializer.data, status=status.HTTP_200_OK)
 
