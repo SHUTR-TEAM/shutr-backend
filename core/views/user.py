@@ -152,9 +152,6 @@ def user_find_all(request):
     }, safe=False)
 
 
-
-
-
 # Find a user by ID
 # GET /api/users/:user_id
 @api_view(['GET'])
