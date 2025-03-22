@@ -86,21 +86,21 @@ def user_find_all(request):
             # Return all users when no filters are applied
             users_queryset = User.objects.all() 
 
+        # Apply sorting based on selected option: newest or highest rated.
         if sort_by == "recent":
             users_queryset = users_queryset.order_by("-created_at")
             
         elif sort_by == "popular":
             users_queryset = users_queryset.order_by("-rating")
 
-
     except Exception as e:
         return JsonResponse({"error": str(e)}, status=500)
 
-    #convert the MongoDB query results into JSON format
+    # convert the MongoDB query results into JSON format
     users_json = []
     for user in users_queryset.as_pymongo():
         users_json.append({
-            "id": str(user["_id"]),  # Convert ObjectId to string
+            "id": str(user["_id"]),
             "first_name": user.get("first_name", ""),
             "last_name": user.get("last_name", ""),
             "email": user.get("email", ""),
