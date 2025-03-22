@@ -194,7 +194,6 @@ class PackageSerializer(serializers.Serializer):
     price = serializers.CharField(max_length=50)
     description = serializers.CharField(max_length=1000)
     details = serializers.ListField(child=serializers.CharField())
-    package_type = serializers.CharField(max_length=100)
     created_at = serializers.DateTimeField(read_only=True)
     updated_at = serializers.DateTimeField(read_only=True)
 
