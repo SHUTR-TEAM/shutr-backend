@@ -81,3 +81,11 @@ class Review(Document):
 
 #     def __str__(self):
 #         return self.title
+
+
+class SocialLinks(Document):
+    user = ReferenceField('User', required=True) 
+    facebook = URLField(required=False)
+    instagram = URLField(required=False)
+    twitter = URLField(required=False)
+    linkedin = URLField(required=False)

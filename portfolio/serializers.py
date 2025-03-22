@@ -1,6 +1,6 @@
 from rest_framework import serializers
 from bson import ObjectId
-from .models import Header, Gallery, Review 
+from .models import Header, Gallery, Review, SocialLinks
 from core.serializers.user import UserSerializer
 import datetime
 
@@ -125,7 +125,7 @@ class HeaderSerializer(serializers.Serializer):
 
 
 class ReviewSerializer(serializers.Serializer):
-    # id = serializers.CharField(read_only=True)  # MongoDB ObjectId as string
+    id = serializers.CharField(read_only=True)  # MongoDB ObjectId as string
     
     # Accept only user IDs when creating/updating
     userID = serializers.CharField(write_only=True)  
@@ -137,6 +137,8 @@ class ReviewSerializer(serializers.Serializer):
     
     rating = serializers.FloatField(min_value=0.0, max_value=10.0)
     reviewText = serializers.CharField(max_length=1000)
+
+
 
     def validate_userID(self, value):
         """Validate and convert userID from string to ObjectId"""
@@ -178,6 +180,54 @@ class ReviewSerializer(serializers.Serializer):
             if not photographer:
                 raise serializers.ValidationError("Photographer not found")
             instance.photographer = photographer
+
+        for key, value in validated_data.items():
+            setattr(instance, key, value)
+
+        instance.save()
+        return instance
+
+
+
+
+
+
+class SocialLinksSerializer(serializers.Serializer):
+    """Serializer for the SocialLinks model."""
+
+    # id = ObjectIdField(read_only=True)  # MongoDB ObjectId
+    userID = serializers.CharField(write_only=True)  # Accept only user ID when creating/updating
+    user = UserSerializer(read_only=True)  # Return full user object when retrieving
+    
+    facebook = serializers.URLField(required=False, allow_blank=True)
+    instagram = serializers.URLField(required=False, allow_blank=True)
+    twitter = serializers.URLField(required=False, allow_blank=True)
+    linkedin = serializers.URLField(required=False, allow_blank=True)
+
+    def validate_userID(self, value):
+        """Validate and convert userID from string to ObjectId."""
+        if not ObjectId.is_valid(value):
+            raise serializers.ValidationError("Invalid ObjectId for userID")
+        return ObjectId(value)
+
+    def create(self, validated_data):
+        """Create and return a new SocialLinks instance."""
+        user_id = validated_data.pop('userID')
+        user = User.objects(id=user_id).first()
+
+        if not user:
+            raise serializers.ValidationError("User not found")
+
+        social_links = SocialLinks.objects.create(user=user, **validated_data)
+        return social_links
+
+    def update(self, instance, validated_data):
+        """Update and return an existing SocialLinks instance."""
+        if 'userID' in validated_data:
+            user = User.objects(id=validated_data.pop('userID')).first()
+            if not user:
+                raise serializers.ValidationError("User not found")
+            instance.user = user
 
         for key, value in validated_data.items():
             setattr(instance, key, value)

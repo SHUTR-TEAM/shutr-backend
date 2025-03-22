@@ -40,6 +40,11 @@ from .views import (
     review_delete_by_id,
     review_find_by_photographer,
 
+    social_links_create,
+    social_links_find_by_photographer,
+    social_links_update,
+    social_links_delete,
+
 
 )
 
@@ -69,10 +74,15 @@ urlpatterns = [
     path('reviews/create', review_create),
     path('reviews/<str:review_id>', review_find_by_id),
     path('reviews/<str:review_id>/update', review_update_by_id),
-    path('reviews/<str:review_id>/delete', review_delete_by_id),
+    path('reviews/delete/<str:review_id>', review_delete_by_id),
     # path('reviews/photographer/<str:review_id>',review_find_by_photographer)
     path('reviews/photographer/<str:photographer_id>/', review_find_by_photographer),
 
+
+    path('SocialLinks/create', social_links_create),
+    path('SocialLinks/photographer/<str:photographer_id>/',social_links_find_by_photographer),
+    path('SocialLinks/photographer/update/<str:photographer_id>',social_links_update),
+    path('SocialLinks/delete/<str:photographer_id>', social_links_delete),
 
     # path('', include(router.urls)),
     # path('packages/', get_packages, name='get_packages'),
