@@ -112,6 +112,7 @@ def user_login(request):
 # Token Refresh (Extend Access Token)
 @api_view(['POST'])
 @csrf_exempt
+@permission_classes([AllowAny])
 def refresh_token(request):
     """Refresh JWT access token using the refresh token from cookies."""
     refresh_token = request.data.get('refresh') or request.COOKIES.get('refresh')
@@ -141,6 +142,7 @@ def refresh_token(request):
 # Verify Token
 @api_view(['POST'])
 @csrf_exempt
+@permission_classes([AllowAny])
 def verify_token(request):
     """Verify if access token is valid."""
     access_token = request.COOKIES.get('access') or request.data.get('token')
@@ -273,6 +275,7 @@ def user_find_by_id(user_id):
 # POST /api/users/:user_id/update
 @api_view(['POST'])
 @csrf_exempt
+@permission_classes([AllowAny])
 def user_update_by_id(request, user_id):
     try:
         user = User.objects.get(id=ObjectId(user_id))
@@ -288,6 +291,7 @@ def user_update_by_id(request, user_id):
 # POST /api/users/:user_id/delete
 @api_view(['GET'])
 @csrf_exempt
+@permission_classes([AllowAny])
 def user_delete_by_id(user_id):
     try:
         user = User.objects.get(id=ObjectId(user_id))

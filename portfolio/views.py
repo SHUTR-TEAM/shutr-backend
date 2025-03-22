@@ -11,8 +11,9 @@ from django.core.files.storage import default_storage
 
 from rest_framework import status
 from rest_framework.response import Response
-from rest_framework.decorators import api_view, parser_classes
+from rest_framework.decorators import api_view, parser_classes, permission_classes
 from rest_framework.parsers import MultiPartParser, FormParser
+from rest_framework.permissions import AllowAny
 
 from core.models.user import User 
 from core.pagination import PaginationWithParams
@@ -29,6 +30,7 @@ fs = gridfs.GridFS(db)
 # POST /api/headers/create
 @api_view(['POST'])
 @csrf_exempt
+@permission_classes([AllowAny])
 def header_create(request):
     serializer = HeaderSerializer(data=request.data)
     if serializer.is_valid():
@@ -42,6 +44,7 @@ def header_create(request):
 # GET /api/header
 @api_view(['GET'])
 @csrf_exempt
+@permission_classes([AllowAny])
 def header_find_all(request):
     paginator = PaginationWithParams()
     headers = Header.objects.all()
@@ -54,6 +57,7 @@ def header_find_all(request):
 # GET /api/headers/:header_id
 @api_view(['GET'])
 @csrf_exempt
+@permission_classes([AllowAny])
 def header_find_by_id(request, header_id):
     try:
         header = Header.objects.get(id=ObjectId(header_id))
@@ -67,6 +71,7 @@ def header_find_by_id(request, header_id):
 # POST /api/headers/:header_id/update
 @api_view(['POST'])
 # @csrf_exempt
+@permission_classes([AllowAny])
 @parser_classes([MultiPartParser, FormParser])
 def header_update_by_id(request, header_id):
     try:
@@ -124,6 +129,7 @@ def header_update_by_id(request, header_id):
 # POST /api/headers/:header_id/delete
 @api_view(['GET'])
 @csrf_exempt
+@permission_classes([AllowAny])
 def header_delete_by_id(header_id):
     try:
         header = Header.objects.get(id=ObjectId(header_id))
@@ -137,6 +143,7 @@ def header_delete_by_id(header_id):
 # POST /api/galleries/create
 @api_view(['POST'])
 @csrf_exempt
+@permission_classes([AllowAny])
 def gallery_create(request):
     serializer = GallerySerializer(data=request.data)
     if serializer.is_valid():
@@ -149,6 +156,7 @@ def gallery_create(request):
 # GET /api/gallery
 @api_view(['GET'])
 @csrf_exempt
+@permission_classes([AllowAny])
 def gallery_find_all(request):
     paginator = PaginationWithParams()
     galleries = Gallery.objects.all()
@@ -159,6 +167,7 @@ def gallery_find_all(request):
 
 @api_view(['POST'])
 @csrf_exempt
+@permission_classes([AllowAny])
 def gallery_create(request):
     try:
         # 1. Extract file, category, photographerID
@@ -215,6 +224,7 @@ def gallery_create(request):
 # GET /api/galleries/photographer/:photographer_id
 @api_view(['GET'])
 @csrf_exempt
+@permission_classes([AllowAny])
 def gallery_find_by_photographer(request, photographer_id):
     try:
         # 1. Find the photographer by ID
@@ -245,6 +255,7 @@ def gallery_find_by_photographer(request, photographer_id):
 # GET /api/galleries/:gallery_id
 @api_view(['GET'])
 @csrf_exempt
+@permission_classes([AllowAny])
 def gallery_find_by_id(request, gallery_id):
     try:
         gallery = Gallery.objects.get(id=ObjectId(gallery_id))
@@ -309,6 +320,7 @@ def gallery_find_by_id(request, gallery_id):
 # POST /api/galleries/:gallery_id/delete
 @api_view(['GET'])
 @csrf_exempt
+@permission_classes([AllowAny])
 def gallery_delete_by_id(request, gallery_id):
     try:
         gallery = Gallery.objects.get(id=ObjectId(gallery_id))
@@ -346,6 +358,7 @@ def gallery_delete_by_id(request, gallery_id):
 
 @api_view(['POST'])
 @csrf_exempt
+@permission_classes([AllowAny])
 def gallery_delete_photo(request, participant_id):
     try:
         # Extract image URL from the request body
@@ -382,6 +395,7 @@ def gallery_delete_photo(request, participant_id):
 # POST /api/reviews/create
 @api_view(['POST'])
 @csrf_exempt
+@permission_classes([AllowAny])
 def review_create(request):
     serializer = ReviewSerializer(data=request.data)
     if serializer.is_valid():
@@ -394,6 +408,7 @@ def review_create(request):
 # GET /api/review
 @api_view(['GET'])
 @csrf_exempt
+@permission_classes([AllowAny])
 def review_find_all(request):
     paginator = PaginationWithParams()
     reviews = Review.objects.all()
@@ -407,6 +422,7 @@ def review_find_all(request):
 # GET /api/reviews/photographer/:photographer_id
 @api_view(['GET'])
 @csrf_exempt
+@permission_classes([AllowAny])
 def review_find_by_photographer(request, photographer_id):
     try:
         photographer = User.objects.get(id=ObjectId(photographer_id))
@@ -429,6 +445,7 @@ def review_find_by_photographer(request, photographer_id):
 # GET /api/reviews/:review_id
 @api_view(['GET'])
 @csrf_exempt
+@permission_classes([AllowAny])
 def review_find_by_id(request, review_id):
     try:
         review = Review.objects.get(id=ObjectId(review_id))
@@ -442,6 +459,7 @@ def review_find_by_id(request, review_id):
 # POST /api/reviews/:review_id/update
 @api_view(['POST'])
 @csrf_exempt
+@permission_classes([AllowAny])
 def review_update_by_id(request, review_id):
     try:
         review = Review.objects.get(id=ObjectId(review_id))
@@ -458,6 +476,7 @@ def review_update_by_id(request, review_id):
 # POST /api/reviews/:review_id/delete
 @api_view(['GET'])
 @csrf_exempt
+@permission_classes([AllowAny])
 def review_delete_by_id(request, review_id):
     try:
         review = Review.objects.get(id=ObjectId(review_id))
@@ -523,6 +542,7 @@ def review_delete_by_id(request, review_id):
 # POST /api/packages/create
 @api_view(['POST'])
 @csrf_exempt
+@permission_classes([AllowAny])
 def package_create(request):
     serializer = PackageSerializer(data=request.data)
     if serializer.is_valid():
@@ -536,6 +556,7 @@ def package_create(request):
 # GET /api/packages
 @api_view(['GET'])
 @csrf_exempt
+@permission_classes([AllowAny])
 def package_find_all(request):
     paginator = PaginationWithParams()
     packages = Review.objects.all()
@@ -548,6 +569,7 @@ def package_find_all(request):
 # GET /api/packages/:package_id
 @api_view(['GET'])
 @csrf_exempt
+@permission_classes([AllowAny])
 def package_find_by_id(request, package_id):
     try:
         package = Package.objects.get(id=ObjectId(package_id))
@@ -561,6 +583,7 @@ def package_find_by_id(request, package_id):
 # POST /api/packages/:package_id/update
 @api_view(['POST'])
 @csrf_exempt
+@permission_classes([AllowAny])
 def package_update_by_id(request, package_id):
     try:
         package = Package.objects.get(id=ObjectId(package_id))
@@ -577,6 +600,7 @@ def package_update_by_id(request, package_id):
 # POST /api/packages/:package_id/delete
 @api_view(['GET'])
 @csrf_exempt
+@permission_classes([AllowAny])
 def package_delete_by_id(request, package_id):
     try:
         package = Package.objects.get(id=ObjectId(package_id))
@@ -590,6 +614,7 @@ def package_delete_by_id(request, package_id):
 # POST /api/SocialLinks/create
 @api_view(['POST'])
 @csrf_exempt
+@permission_classes([AllowAny])
 def social_links_create(request):
     serializer = SocialLinksSerializer(data=request.data)
     
@@ -603,6 +628,7 @@ def social_links_create(request):
 
 @api_view(['GET'])
 @csrf_exempt
+@permission_classes([AllowAny])
 def social_links_find_by_photographer(request, photographer_id):
     """Retrieve social links for a specific photographer."""
     try:
@@ -630,6 +656,7 @@ def social_links_find_by_photographer(request, photographer_id):
 # POST /api/SocialLinks/update/<photographer_id>/
 @api_view(['POST'])
 @csrf_exempt
+@permission_classes([AllowAny])
 def social_links_update(request, photographer_id):
     """Update social links for a specific photographer."""
     try:
@@ -675,6 +702,7 @@ def social_links_update(request, photographer_id):
 # DELETE /api/SocialLinks/delete/<photographer_id>/
 @api_view(['DELETE'])
 @csrf_exempt
+@permission_classes([AllowAny])
 def social_links_delete(request, photographer_id):
     """Delete social links for a specific photographer."""
     try:
