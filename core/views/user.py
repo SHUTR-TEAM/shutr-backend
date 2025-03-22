@@ -36,8 +36,8 @@ def user_create(request):
 #function to handle search page
 @api_view(['GET'])
 @csrf_exempt
-def user_find_all(request):
-    
+def user_find_all(request):      
+      
     #Extracts query parameters and saves them to variables
     search = request.GET.get("q", "").strip()
     style = request.GET.get('style', "").strip()
@@ -46,6 +46,10 @@ def user_find_all(request):
     availability = request.GET.get("availability", "").strip()
     experienceLevel = request.GET.get("experienceLevel", "").strip()
     sort_by = request.GET.get("sortBy", "").strip()
+
+    page = int(request.GET.get("page", 1))
+    limit = int(request.GET.get("limit", 10))  
+    offset = (page - 1) * limit
 
     filters = {}
 
@@ -81,24 +85,28 @@ def user_find_all(request):
 
             # Return empty list when no results
             if not users_queryset.count():
-                return JsonResponse([], safe=False)  
+                return JsonResponse({"results": [], "total": 0, "page": page, "limit": limit}, safe=False)  
         else:
             # Return all users when no filters are applied
             users_queryset = User.objects.all() 
 
-        # Apply sorting based on selected option: newest or highest rated.
         if sort_by == "recent":
             users_queryset = users_queryset.order_by("-created_at")
             
         elif sort_by == "popular":
             users_queryset = users_queryset.order_by("-rating")
 
+        total = users_queryset.count() 
+
+        # Apply pagination
+        paginated_users = users_queryset.skip(offset).limit(limit)   
+
     except Exception as e:
         return JsonResponse({"error": str(e)}, status=500)
 
     # convert the MongoDB query results into JSON format
     users_json = []
-    for user in users_queryset.as_pymongo():
+    for user in paginated_users.as_pymongo():
         users_json.append({
             "id": str(user["_id"]),
             "first_name": user.get("first_name", ""),
@@ -132,7 +140,13 @@ def user_find_all(request):
             ).isoformat(),
         })
 
-    return JsonResponse(users_json, safe=False)
+    #Return pagination data 
+    return JsonResponse({
+        "results": users_json,
+        "total": total,
+        "page": page,
+        "limit": limit
+    }, safe=False)
 
 
 
