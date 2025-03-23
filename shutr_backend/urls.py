@@ -17,6 +17,8 @@ urlpatterns = [
     # path('search/', include('search.urls')),
     path('booking/', include('booking.urls')),
     # path('auth/', include('auth.urls')),
+    path('auth/', include('user.urls')),
+    path('vertex_multimodaling/', include('vertex_multimodaling.urls')),
 ]
 
 
