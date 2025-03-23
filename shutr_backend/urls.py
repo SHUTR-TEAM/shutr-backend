@@ -14,6 +14,7 @@ urlpatterns = [
     path('api/', include('chat.urls')),
     # path('auth/', include('auth.urls')),
     path('auth/', include('user.urls')),
+    path('vertex_multimodaling/', include('vertex_multimodaling.urls')),
 ]
 
 
