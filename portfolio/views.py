@@ -565,19 +565,6 @@ def package_find_all(request):
     return paginator.get_paginated_response(serializer.data)
 
 
-# Find a package by ID
-# GET /api/packages/:package_id
-# @api_view(['GET'])
-# @csrf_exempt
-# @permission_classes([AllowAny])
-# def package_find_by_id(request, package_id):
-#     try:
-#         package = Package.objects.get(id=ObjectId(package_id))
-#         serializer = ReviewSerializer(package)
-#         return Response(serializer.data, status=status.HTTP_200_OK)
-#     except Package.DoesNotExist:
-#         return Response({"error": "Package not found"}, status=status.HTTP_404_NOT_FOUND)
-
 
 @api_view(['GET'])
 @permission_classes([AllowAny])
@@ -612,7 +599,26 @@ def package_find_by_photographerid(request, photographer_id):
         return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
 
+# newly added
+@api_view(['POST'])
+@permission_classes([AllowAny])
+def package_update(request, package_id):
+    try:
+        # Fetch the package by ID
+        package = Package.objects.filter(id=ObjectId(package_id)).first()
+        if not package:
+            return Response({"error": "Package not found"}, status=status.HTTP_404_NOT_FOUND)
 
+        # Deserialize and validate request data
+        serializer = PackageSerializer(package, data=request.data, partial=True)  # Allow partial updates
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
+    except Exception as e:
+        return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
 
 
