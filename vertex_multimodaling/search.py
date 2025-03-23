@@ -13,22 +13,31 @@ model = MultiModalEmbeddingModel.from_pretrained("multimodalembedding@001")
 
 DEPLOYED_INDEX_ID = settings.DEPLOYED_INDEX_ID
 ENDPOINT = f"projects/{PROJECT_ID}/locations/{REGION}/indexEndpoints/{DEPLOYED_INDEX_ID}"
+index_client = MatchingEngineIndexEndpoint(endpoint_name=ENDPOINT)
 
 def search_similar_photos(search_query, top_k=30 ):
     """Find similar photos based on customer search input."""
     text_embedding = model.get_embeddings(text=search_query).text_embedding
-    index_client = MatchingEngineIndexEndpoint(endpoint_name=ENDPOINT)
+
     
     response = index_client.find_neighbors(
         deployed_index_id=DEPLOYED_INDEX_ID,
         queries=[text_embedding],
-        num_neighbors=top_k
+        num_neighbors=1000 #number of similar photos
     )
     
-    photographers_ids = []
+    # Set to track unique photographers
+    unique_photographers = set()
+    
+
     for neighbor in response.nearest_neighbors[0].neighbors:
         metadata = neighbor.datapoint.datapoint_metadata
         photographer_id = metadata.get("photographer_id")
-        photographers_ids.append(photographer_id)
+        
+        if photographer_id:
+            unique_photographers.add(photographer_id)
+        
+        if len(unique_photographers) >= top_k:
+            break
 
-    return photographers_ids
+    return list(unique_photographers)
