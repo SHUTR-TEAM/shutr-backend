@@ -300,6 +300,15 @@ class PackageSerializer(serializers.Serializer):
         package = Package.objects.create(portfolio=portfolio, **validated_data)
         return package
 
+    def get_portfolio(self, obj):
+        """Retrieve portfolio details for the response"""
+        if obj.portfolio:
+            return {
+                "id": str(obj.portfolio.id),
+                # "name": obj.portfolio.name,  # Adjust based on the Header model fields
+            }
+        return None    
+
     def update(self, instance, validated_data):
         """Update and return an existing Package instance."""
         if 'portfolio_id' in validated_data:
