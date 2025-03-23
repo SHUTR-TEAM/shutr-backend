@@ -1,14 +1,35 @@
 from bson import ObjectId
+from django.shortcuts import get_object_or_404
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from rest_framework import status
 
 from chat.models.chatroom import ChatRoom
 from chat.serializers.chatroom import ChatRoomSerializer
+from user.models import Photographer, User
+from user.serializers import PhotographerSerializer, UserSerializer
+from django.core.exceptions import ObjectDoesNotExist
+
 
 # Create a new chat room.
 # POST /api/chat/rooms/create
+# @api_view(['POST'])
+# def chat_room_create(request):
+#     serializer = ChatRoomSerializer(data=request.data)
+#     if serializer.is_valid():
+#         chat_room = serializer.save()
+#         return Response(
+#             {"message": "Chat room created", "room_id": str(chat_room.id)},
+#             status=status.HTTP_201_CREATED
+#         )
+#     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+# Create a new chat room.
+# POST /api/chat/rooms/create
+# Create a new chat room.
+# POST /api/chat/rooms/create
 @api_view(['POST'])
+# @csrf_exempt
 def chat_room_create(request):
     serializer = ChatRoomSerializer(data=request.data)
     if serializer.is_valid():
@@ -18,6 +39,7 @@ def chat_room_create(request):
             status=status.HTTP_201_CREATED
         )
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
 
 # List all chat rooms.
 # GET /api/chat/rooms

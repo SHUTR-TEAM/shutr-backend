@@ -1,4 +1,3 @@
-# consumers.py
 import json
 from channels.generic.websocket import AsyncWebsocketConsumer
 
@@ -32,8 +31,8 @@ class ChatConsumer(AsyncWebsocketConsumer):
         # media_url = text_data_json['media_url']
 
         # Save message to database
-        room = await ChatRoom.objects.aget(id=self.room_id)
-        await ChatMessage.objects.acreate(room=room, sender=sender, text=text)
+        room = ChatRoom.objects.get(id=self.room_id)
+        ChatMessage.objects.create(chat=room, sender=sender, text=text)
 
         # Broadcast message to room group
         await self.channel_layer.group_send(
@@ -47,10 +46,10 @@ class ChatConsumer(AsyncWebsocketConsumer):
 
     async def chat_message(self, event):
         sender = event['sender']
-        content = event['content']
+        text = event['text']
 
         # Send message to WebSocket
         await self.send(text_data=json.dumps({
             'sender': sender,
-            'content': content,
+            'text': text,
         }))
