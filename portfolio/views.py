@@ -599,6 +599,33 @@ def package_find_by_photographerid(request, photographer_id):
         return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
 
+@api_view(['GET'])
+@permission_classes([AllowAny])
+def package_find_by_portfolioid(request, portfolio_id):
+    try:
+        # Validate portfolio ID
+        if not ObjectId.is_valid(portfolio_id):
+            return Response({"error": "Invalid portfolio ID"}, status=status.HTTP_400_BAD_REQUEST)
+
+        # Fetch the portfolio
+        portfolio = Header.objects.filter(id=ObjectId(portfolio_id)).first()
+        if not portfolio:
+            return Response({"message": "Portfolio not found"}, status=status.HTTP_404_NOT_FOUND)
+
+        # Get packages linked to the portfolio
+        packages = Package.objects.filter(portfolio=portfolio)
+        if not packages:
+            return Response({"message": "No packages found for this portfolio"}, status=status.HTTP_404_NOT_FOUND)
+
+        # Serialize and return data
+        serializer = PackageSerializer(packages, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+    except Exception as e:
+        return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
+
+
 # newly added
 @api_view(['POST'])
 @permission_classes([AllowAny])

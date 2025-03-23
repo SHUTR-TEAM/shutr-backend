@@ -41,6 +41,7 @@ from .views import (
     package_update_by_id,
     package_update,
     package_find_by_photographerid,
+    package_find_by_portfolioid,
 
     review_create,
     review_find_all,
@@ -91,6 +92,7 @@ urlpatterns = [
     path('packages/create', package_create),
     path('packages/<str:package_id>', package_find_by_id),
     path('packages/photographer/<str:photographer_id>', package_find_by_photographerid),
+    path('packages/portfolio/<str:portfolio_id>',package_find_by_portfolioid),
     # path('packages/<str:package_id>/update', package_update_by_id),
     path('packages/<str:package_id>/update', package_update),
 
