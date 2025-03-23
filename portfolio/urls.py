@@ -76,8 +76,8 @@ urlpatterns = [
     # path('galleries/<str:gallery_id>/update', gallery_update_by_id),
     path('galleries/<str:gallery_id>/delete', gallery_delete_by_id),
     # path('galleries/<str:gallery_id>/delete_photo', gallery_delete_photo),
-    path('galleries/<str:participant_id>/delete_photo', gallery_delete_photo),
-    path('galleries/photographer/<str:photographer_id>/',gallery_find_by_photographer),
+    path('galleries/<str:portfolio_id>/delete_photo', gallery_delete_photo),
+    path('galleries/photographer/<str:portfolio_id>/',gallery_find_by_photographer),
 
 
     path('reviews', review_find_all),
@@ -102,9 +102,9 @@ urlpatterns = [
 
 
     path('SocialLinks/create', social_links_create),
-    path('SocialLinks/photographer/<str:photographer_id>/',social_links_find_by_photographer),
-    path('SocialLinks/photographer/update/<str:photographer_id>',social_links_update),
-    path('SocialLinks/delete/<str:photographer_id>', social_links_delete),
+    path('SocialLinks/photographer/<str:portfolio_id>/',social_links_find_by_photographer),
+    path('SocialLinks/photographer/update/<str:portfolio_id>',social_links_update),
+    path('SocialLinks/delete/<str:portfolio_id>', social_links_delete),
 
     # path('', include(router.urls)),
 ]

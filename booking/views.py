@@ -262,3 +262,46 @@ def booking_get_unavailable_dates(request):
 
     return Response({"unavailable_dates": booked_dates}, status=status.HTTP_200_OK)
 
+
+@api_view(['GET'])
+@csrf_exempt
+@permission_classes([AllowAny])
+def get_photographer_booking_dates(request, photographer_id, year_month):
+    try:
+        try:
+            year, month = year_month.split('-')
+            year = int(year)
+            month = int(month)
+            if not (1 <= month <= 12):
+                raise ValueError("Month must be between 1 and 12")
+        except ValueError as e:
+            return Response({"error": f"Invalid year-month format. Should be YYYY-MM. {str(e)}"}, 
+                           status=status.HTTP_400_BAD_REQUEST)
+        
+        # Calculate start and end dates for the month
+        start_date = datetime.datetime(year, month, 1)
+        
+        # Determine the last day of the month
+        if month == 12:
+            end_date = datetime.datetime(year + 1, 1, 1) - datetime.timedelta(days=1)
+        else:
+            end_date = datetime.datetime(year, month + 1, 1) - datetime.timedelta(days=1)
+        
+        # Find bookings for the photographer in the given month
+        bookings = Booking.objects.filter(
+            photographer_id=photographer_id,
+            event__date__gte=start_date.strftime('%Y-%m-%d'),
+            event__date__lte=end_date.strftime('%Y-%m-%d')
+        )
+        
+        # Extract dates from bookings
+        booking_dates = [booking.event.date for booking in bookings]
+        
+        return Response({
+            "photographer_id": photographer_id, 
+            "year_month": year_month, 
+            "booking_dates": booking_dates
+        }, status=status.HTTP_200_OK)
+    
+    except Exception as e:
+        return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)

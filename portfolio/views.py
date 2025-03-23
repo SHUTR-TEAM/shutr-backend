@@ -82,10 +82,6 @@ def header_update_by_id(request, header_id):
         if serializer.is_valid():
             header = serializer.save()
 
-        #Handle image uploads
-        # profile_image = request.FILES.get("profile_image")
-        # background_image = request.FILES.get("background_image")
-
         #  Convert uploaded images to URLs 
         if 'profile_image' in request.FILES:
             profile_image = request.FILES['profile_image']
@@ -101,16 +97,6 @@ def header_update_by_id(request, header_id):
             path = default_storage.save(Background_image_path, ContentFile(Background_image.read()))
             # header.Background_image_url = f"/{path}"
             header.Background_image_url = request.build_absolute_uri(f"/media/{path}")
-
-        # if profile_image:
-        #     profile_id = fs.put(profile_image, filename=profile_image.name)
-        #     profile_url = f"/api/get_image/{profile_id}"
-        #     header.profile_image_url = profile_url
-
-        # if background_image:
-        #     background_id = fs.put(background_image, filename=background_image.name)
-        #     background_url = f"/api/get_image/{background_id}"
-        #     header.background_image_url = background_url
 
         header.save()
            
@@ -170,8 +156,6 @@ def gallery_find_all(request):
 @permission_classes([AllowAny])
 def gallery_create(request):
     try:
-        # 1. Extract file, category, photographerID
-        # image_file = request.FILES.get("image")  # or whatever key you use
         images = request.FILES.getlist("image")
         # category = request.POST.get("category")
         categories = request.POST.getlist("category")
@@ -225,26 +209,15 @@ def gallery_create(request):
 @api_view(['GET'])
 @csrf_exempt
 @permission_classes([AllowAny])
-def gallery_find_by_photographer(request, photographer_id):
+def gallery_find_by_photographer(request, portfolio_id):
     try:
-        # 1. Find the photographer by ID
-        photographer = User.objects.get(id=ObjectId(photographer_id))
+        # portfolio = Header.objects.get(id=ObjectId(portfolio_id))
+        images = Gallery.objects.filter(portfolioID=ObjectId(portfolio_id))
         
-        # 2. Get all galleries that belong to this photographer
-        galleries = Gallery.objects.filter(photographer=photographer)
-        
-        # 3. Handle case where no galleries are found
-        # if not galleries:
-        #     return Response({"message": "No galleries found for this photographer"}, status=status.HTTP_404_NOT_FOUND)
-            # return Response({"message": "No galleries found for this photographer"})
-        
-        # 4. Serialize the galleries
-        serializer = GallerySerializer(galleries, many=True)
-        
-        # 5. Return the serialized data
+        serializer = GallerySerializer(images, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
     
-    except User.DoesNotExist:
+    except Header.DoesNotExist:
         return Response({"error": "Photographer not found"}, status=status.HTTP_404_NOT_FOUND)
     
     except Exception as e:
@@ -265,57 +238,6 @@ def gallery_find_by_id(request, gallery_id):
         return Response({"error": "Gallery not found"}, status=status.HTTP_404_NOT_FOUND)
 
 
-# Update a gallery by ID
-# POST /api/galleries/:gallery_id/update
-# @api_view(['POST'])
-# @csrf_exempt
-# def gallery_update_by_id(request, gallery_id):
-#     try:
-#         gallery = Gallery.objects.get(id=ObjectId(gallery_id))
-#         serializer = GallerySerializer(gallery, data=request.data, partial=True)
-#         if serializer.is_valid():
-#             gallery = serializer.save()
-#             return Response({"message": "gallery updated successfully"}, status=status.HTTP_200_OK)
-#         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-#     except Gallery.DoesNotExist:
-#         return Response({"error": "Gallery not found"}, status=status.HTTP_404_NOT_FOUND)
-
-
-# @api_view(['POST'])
-# @csrf_exempt
-# def gallery_update_by_id(request, gallery_id):
-#     try:
-#         gallery = Gallery.objects.get(id=ObjectId(gallery_id))
-
-#         # Extract images and categories from form-data
-#         images = request.FILES.getlist("Gallery")  # List of uploaded images
-#         categories = request.POST.getlist("category")  # Corresponding categories
-
-#         if not images or not categories:
-#             return Response({"error": "Missing images or categories"}, status=status.HTTP_400_BAD_REQUEST)
-
-#         new_gallery_items = []
-#         for img, category in zip(images, categories):
-#             # Save image to media storage
-#             # file_path = f"gallery/{gallery_id}/{img.name}"
-#             file_path = f"gallery/{img.name}"
-#             saved_path = default_storage.save(file_path, ContentFile(img.read()))
-#             image_url = request.build_absolute_uri(settings.MEDIA_URL + saved_path)
-
-#             # Create new GalleryFormat entry
-#             new_gallery_items.append(GalleryFormat(url=image_url, category=category))
-
-#         # Append new images instead of replacing
-#         gallery.Gallery.extend(new_gallery_items)
-#         gallery.save()
-
-#         return Response({"message": "Gallery updated successfully", "Gallery": GallerySerializer(gallery).data}, status=status.HTTP_200_OK)
-
-#     except Gallery.DoesNotExist:
-#         return Response({"error": "Gallery not found"}, status=status.HTTP_404_NOT_FOUND)
-
-    
-
 # Delete a gallery by ID
 # POST /api/galleries/:gallery_id/delete
 @api_view(['GET'])
@@ -329,32 +251,6 @@ def gallery_delete_by_id(request, gallery_id):
     except Gallery.DoesNotExist:
         return Response({"error": "Gallery not found"}, status=status.HTTP_404_NOT_FOUND) 
 
-
-# Delete a photo in gallery by ID and url        
-# POST /api/galleries/:gallery_id/delete_photo
-# @api_view(['POST'])
-# @csrf_exempt
-# def gallery_delete_photo(request, gallery_id):
-#     try:
-#         # Get the gallery object
-#         gallery = Gallery.objects.get(id=ObjectId(gallery_id))
-
-#         # Extract image URL from the request body
-#         image_url = request.data.get('image_url', None)
-
-#         if not image_url:
-#             return Response({"error": "No image URL provided"}, status=status.HTTP_400_BAD_REQUEST)
-
-#         # Find the image in the Gallery and remove it
-#         gallery.Gallery = [image for image in gallery.Gallery if image.url != image_url]
-
-#         # Save the updated gallery
-#         gallery.save()
-
-#         return Response({"message": "Photo deleted successfully"}, status=status.HTTP_200_OK)
-
-#     except Gallery.DoesNotExist:
-#         return Response({"error": "Gallery not found"}, status=status.HTTP_404_NOT_FOUND)
 
 @api_view(['POST'])
 @csrf_exempt
@@ -377,18 +273,6 @@ def gallery_delete_photo(request, participant_id):
 
     except Exception as e:
         return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-
-
-# # Create a new review
-# @api_view(['POST'])
-# def review_create(request):
-#     serializer = ReviewSerializer(data=request.data)
-#     if serializer.is_valid():
-#         review = serializer.save()
-#         return Response({"message": "Review created", "review_id": str(review.id)}, status=status.HTTP_201_CREATED)
-#     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
- 
-
 
 
 # Create a new review
@@ -417,7 +301,6 @@ def review_find_all(request):
     return paginator.get_paginated_response(serializer.data)
 
 
-
 # Find all reviews for a specific photographer
 # GET /api/reviews/photographer/:photographer_id
 @api_view(['GET'])
@@ -437,8 +320,6 @@ def review_find_by_photographer(request, photographer_id):
         return Response({"error": "Photographer not found"}, status=status.HTTP_404_NOT_FOUND)
     except Exception as e:
         return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
-
-
 
 
 # Find a review by ID
@@ -486,58 +367,6 @@ def review_delete_by_id(request, review_id):
         return Response({"error": "Review not found"}, status=status.HTTP_404_NOT_FOUND)       
 
 
-
-# @api_view(['GET'])
-# def get_packages(request):
-#     packages = Package.objects.all()
-#     serializer = PackageSerializer(packages, many=True)
-#     return Response(serializer.data)
-
-
-# class PackageViewSet(viewsets.ModelViewSet):
-#     queryset = Package.objects.all()
-#     serializer_class = PackageSerializer
-
-#     def create(self, request, *args, **kwargs):
-#         """Create a new package"""
-#         serializer = self.get_serializer(data=request.data)
-#         if serializer.is_valid():
-#             serializer.save()
-#             return Response(serializer.data, status=status.HTTP_201_CREATED)
-#         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-#     def retrieve(self, request, pk=None):
-#         """Get a single package by ID"""
-#         try:
-#             package = Package.objects.get(pk=pk)
-#             serializer = PackageSerializer(package)
-#             return Response(serializer.data)
-#         except Package.DoesNotExist:
-#             return Response({"error": "Package not found"}, status=status.HTTP_404_NOT_FOUND)
-
-#     def update(self, request, pk=None):
-#         """Update an existing package"""
-#         try:
-#             package = Package.objects.get(pk=pk)
-#         except Package.DoesNotExist:
-#             return Response({"error": "Package not found"}, status=status.HTTP_404_NOT_FOUND)
-        
-#         serializer = PackageSerializer(package, data=request.data)
-#         if serializer.is_valid():
-#             serializer.save()
-#             return Response(serializer.data)
-#         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-#     def destroy(self, request, pk=None):
-#         """Delete a package"""
-#         try:
-#             package = Package.objects.get(pk=pk)
-#             package.delete()
-#             return Response({"message": "Package deleted successfully"}, status=status.HTTP_204_NO_CONTENT)
-#         except Package.DoesNotExist:
-#             return Response({"error": "Package not found"}, status=status.HTTP_404_NOT_FOUND)
-
-
 # Create a new packages
 # POST /api/packages/create
 @api_view(['POST'])
@@ -565,7 +394,6 @@ def package_find_all(request):
     return paginator.get_paginated_response(serializer.data)
 
 
-
 @api_view(['GET'])
 @permission_classes([AllowAny])
 def package_find_by_id(request, package_id):
@@ -578,7 +406,6 @@ def package_find_by_id(request, package_id):
         return Response(serializer.data, status=status.HTTP_200_OK)
     except Exception as e:
         return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
-
 
 
 @api_view(['GET'])
@@ -625,8 +452,6 @@ def package_find_by_portfolioid(request, portfolio_id):
         return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
 
-
-# newly added
 @api_view(['POST'])
 @permission_classes([AllowAny])
 def package_update(request, package_id):
@@ -646,8 +471,6 @@ def package_update(request, package_id):
     
     except Exception as e:
         return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
-
-
 
 
 # Update a package by ID
@@ -696,19 +519,18 @@ def social_links_create(request):
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
-
 @api_view(['GET'])
 @csrf_exempt
 @permission_classes([AllowAny])
-def social_links_find_by_photographer(request, photographer_id):
+def social_links_find_by_photographer(request, portfolio_id):
     """Retrieve social links for a specific photographer."""
     try:
         # Validate if photographer_id is a valid ObjectId
-        if not ObjectId.is_valid(photographer_id):
+        if not ObjectId.is_valid(portfolio_id):
             return Response({"error": "Invalid photographer ID format"}, status=status.HTTP_400_BAD_REQUEST)
         
-        photographer = User.objects.get(id=ObjectId(photographer_id))  # Fetch photographer
-        social_links = SocialLinks.objects.filter(user=photographer).first()  # Get social links for the user
+        portfolio = Header.objects.get(id=ObjectId(portfolio_id))  # Fetch photographer
+        social_links = SocialLinks.objects.filter(portfolio=portfolio).first()  # Get social links for the user
         
         if not social_links:
             return Response({"message": "No social links found for this photographer"}, status=status.HTTP_404_NOT_FOUND)
@@ -716,49 +538,50 @@ def social_links_find_by_photographer(request, photographer_id):
         serializer = SocialLinksSerializer(social_links)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
-    except User.DoesNotExist:
+    except Header.DoesNotExist:
         return Response({"error": "Photographer not found"}, status=status.HTTP_404_NOT_FOUND)
     except Exception as e:
         return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
 
-
 # Update social links for a photographer
-# POST /api/SocialLinks/update/<photographer_id>/
+# POST /api/SocialLinks/update/<portfolio_id>/
 @api_view(['POST'])
 @csrf_exempt
 @permission_classes([AllowAny])
-def social_links_update(request, photographer_id):
+def social_links_update(request, portfolio_id):
     """Update social links for a specific photographer."""
     try:
         # Validate if photographer_id is a valid ObjectId
-        if not ObjectId.is_valid(photographer_id):
-            return Response({"error": "Invalid photographer ID format"}, status=status.HTTP_400_BAD_REQUEST)
+        if not ObjectId.is_valid(portfolio_id):
+            return Response({"error": "Invalid portfolio_id ID format"}, status=status.HTTP_400_BAD_REQUEST)
 
         # Fetch the photographer
         try:
-            photographer = User.objects.get(id=ObjectId(photographer_id))
-        except User.DoesNotExist:
+            portfolio = Header.objects.get(id=ObjectId(portfolio_id))
+        except Header.DoesNotExist:
             return Response({"error": "Photographer not found"}, status=status.HTTP_404_NOT_FOUND)
 
         # Fetch the existing social links or create new if not found
-        social_links = SocialLinks.objects.filter(user=photographer).first()  # Use filter and get the first match    
+        social_links = SocialLinks.objects.filter(portfolio=portfolio).first()  # Use filter and get the first match    
 
         if not social_links:
             # If no existing social links, create a new entry
             social_links = SocialLinks.objects.create(
-                user=photographer,
-                facebook=request.data.get("facebook", ""),
-                instagram=request.data.get("instagram", ""),
-                twitter=request.data.get("twitter", ""),
-                linkedin=request.data.get("linkedin", "")
+                portfolio=portfolio,
+                facebook=request.data.get("facebook"),
+                instagram=request.data.get("instagram"),
+                twitter=request.data.get("twitter"),
+                linkedin=request.data.get("linkedin")
             )
+            print("sdf")
         else:
+            print("awda")
             # Update existing social links
-            social_links.facebook = request.data.get("facebook", "")
-            social_links.instagram = request.data.get("instagram", "")
-            social_links.twitter = request.data.get("twitter", "")
-            social_links.linkedin = request.data.get("linkedin", "")
+            social_links.facebook = request.data.get("facebook")
+            social_links.instagram = request.data.get("instagram")
+            social_links.twitter = request.data.get("twitter")
+            social_links.linkedin = request.data.get("linkedin")
             social_links.save()  # Save the updated instance
 
         # Serialize and return response
@@ -767,7 +590,6 @@ def social_links_update(request, photographer_id):
 
     except Exception as e:
         return Response({"error": f"Unexpected error: {str(e)}"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-
 
 
 # DELETE /api/SocialLinks/delete/<photographer_id>/
@@ -799,4 +621,3 @@ def social_links_delete(request, photographer_id):
 
     except Exception as e:
         return Response({"error": f"Unexpected error: {str(e)}"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-

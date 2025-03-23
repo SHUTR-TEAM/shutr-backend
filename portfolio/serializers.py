@@ -218,13 +218,13 @@ class ReviewSerializer(serializers.Serializer):
     rating = serializers.FloatField(min_value=0.0, max_value=10.0)
     reviewText = serializers.CharField(max_length=1000)
 
-    def validate_userID(self, value):
+    def validate_user_id(self, value):
         """Validate and convert userID from string to ObjectId"""
         if not ObjectId.is_valid(value):
             raise serializers.ValidationError("Invalid ObjectId for userID")
         return ObjectId(value)  # Convert string to ObjectId
 
-    def validate_photographerID(self, value):
+    def validate_photographer_id(self, value):
         """Validate and convert photographerID from string to ObjectId"""
         if not ObjectId.is_valid(value):
             raise serializers.ValidationError("Invalid ObjectId for photographerID")
@@ -232,8 +232,8 @@ class ReviewSerializer(serializers.Serializer):
 
     def create(self, validated_data):
         """Create and return a new Review instance."""
-        user_id = validated_data.pop('userID')
-        photographer_id = validated_data.pop('photographerID')
+        user_id = validated_data.pop('user_id')
+        photographer_id = validated_data.pop('photographer_id')
 
         # Fetch User objects
         user = User.objects(id=user_id).first()
@@ -248,13 +248,13 @@ class ReviewSerializer(serializers.Serializer):
     def update(self, instance, validated_data):
         """Update and return an existing Review instance."""
         if 'userID' in validated_data:
-            user = User.objects(id=validated_data.pop('userID')).first()
+            user = User.objects(id=validated_data.pop('user_id')).first()
             if not user:
                 raise serializers.ValidationError("User not found")
             instance.user = user
         
         if 'photographerID' in validated_data:
-            photographer = Photographer.objects(id=validated_data.pop('photographerID')).first()
+            photographer = Photographer.objects(id=validated_data.pop('photographer_id')).first()
             if not photographer:
                 raise serializers.ValidationError("Photographer not found")
             instance.photographer = photographer
@@ -370,3 +370,12 @@ class SocialLinksSerializer(serializers.Serializer):
 
         instance.save()
         return instance
+    
+    def get_portfolio(self, obj):
+        """Retrieve portfolio details for the response"""
+        if obj.portfolio:
+            return {
+                "id": str(obj.portfolio.id),
+                # "name": obj.portfolio.name,  # Adjust based on the Header model fields
+            }
+        return None 
