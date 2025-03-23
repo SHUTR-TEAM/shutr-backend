@@ -1,28 +1,15 @@
-
-from mongoengine import Document, EmbeddedDocument, StringField, DateTimeField, ListField, URLField,  ReferenceField, FloatField, EmbeddedDocumentField
+from mongoengine import Document, StringField, DateTimeField, ListField, URLField,  ReferenceField, FloatField
 import datetime
 
-# from djongo import models
-
-
 class Header(Document):
-    name = StringField(max_length=41)
-    Background_image_url = StringField(max_length=255, required=False)
-    profile_image_url = StringField(max_length=255, required=False)
-    description = StringField(max_length=1000, required=False)
-    created_at = DateTimeField(default=lambda: datetime.datetime.utcnow())  # Auto set current time
-    updated_at = DateTimeField(default=lambda: datetime.datetime.utcnow())  # Set manually on updates
+    name = StringField(max_length=41, default="")
+    photographer = ReferenceField('Photographer', required=True)
+    Background_image_url = StringField(max_length=255, required=False, default="")
+    profile_image_url = StringField(max_length=255, required=False, default="")
+    description = StringField(max_length=1000, required=False, default="")
+    created_at = DateTimeField(default=lambda: datetime.datetime.utcnow())
+    updated_at = DateTimeField(default=lambda: datetime.datetime.utcnow()) 
 
-    #photo_collection = ReferenceField(Gallery, required=False)
-
-
-# This is gallery models
-# class GalleryFormat(EmbeddedDocument):
-#     url = StringField()  # Store file path instead of external URL
-#     category = StringField(max_length=20)
-
-# class Gallery(Document):
-#     Gallery = ListField(EmbeddedDocumentField(GalleryFormat))
 
 class Gallery(Document):
     photographer = ReferenceField('User', required=True)
@@ -30,45 +17,17 @@ class Gallery(Document):
     url = StringField()  # Store file path instead of external URL
     category = StringField(max_length=20)
 
-# class GalleryFormat(EmbeddedDocument):
-#     url = URLField()
-#     catagory = StringField(max_length = 20)
-
-# class Gallery(Document):
-#     Gallery = ListField(EmbeddedDocumentField(GalleryFormat))
-       
-
-# class Gallery(Document):
-#     photo_collection = ListField(URLField())
-#     #id = ReferenceField(Header, required=False)    
-
-
-
-
-# class ReviewFormat(EmbeddedDocument):
-#     #  profile_image_url = StringField(max_length=255)
-#     #  address = StringField(max_length=35)
-#     #  name =  StringField(max_length=41)
-#     rating = FloatField(min_value=0.0, max_value=10.0)
-#     reviewText = StringField(max_length=1000 )
-#     userID = ReferenceField('User', required=True)  # foreign key which is used to connect with the user
-#     photographerID = ReferenceField('User', required=True)
-
-
-
-# class Review(Document):
-#     reviews = ListField(EmbeddedDocumentField(ReviewFormat))
-
 
 class Review(Document):
-    user = ReferenceField('User', required=True)  # foreign key which is used to connect with the user
-    photographer = ReferenceField('User', required=True)
+    user = ReferenceField('User', required=True)
+    photographer = ReferenceField('Photographer', required=True)
     rating = FloatField(min_value=0.0, max_value=10.0)
     reviewText = StringField(max_length=1000 )
 
-    
+
 class Package(Document):
-    user = ReferenceField('User', required=True) 
+    # user = ReferenceField('User', required=True) 
+    portfolio = ReferenceField('Header', required=True) 
     title = StringField(max_length=255, required=True)
     price = StringField(max_length=50, required=True)
     description = StringField(max_length=1000, required=True)
@@ -77,24 +36,9 @@ class Package(Document):
     updated_at = DateTimeField(default=datetime.datetime.utcnow)
 
 
-     
-
-
-# class Package(Document):
-#     title = StringField(max_length=255, required=True)
-#     price = StringField(max_length=50, required=True)
-#     description = StringField(max_length=1000, required=True)
-#     details = ListField(StringField(), required=True)  # List of package details
-#     package_type = StringField(max_length=100, required=True)
-#     created_at = DateTimeField(default=datetime.datetime.utcnow)  # Auto-set on creation
-#     updated_at = DateTimeField(default=datetime.datetime.utcnow)  # Auto-set on update
-
-#     def __str__(self):
-#         return self.title
-
-
 class SocialLinks(Document):
-    user = ReferenceField('User', required=True) 
+    # user = ReferenceField('User', required=True) 
+    portfolio = ReferenceField('Header', required=True) 
     facebook = URLField(required=False)
     instagram = URLField(required=False)
     twitter = URLField(required=False)

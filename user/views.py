@@ -186,13 +186,13 @@ def get_user_from_token(request):
         user_id = decoded_token["user_id"]
 
         try:
-            user = User.objects.get(id=user_id)
-        except ObjectDoesNotExist:
-            # If not found in User, check the Photographer collection
             user = Photographer.objects.get(id=user_id)
+            serializer = PhotographerSerializer(user)
+        except ObjectDoesNotExist:
+            user = User.objects.get(id=user_id)
+            serializer = UserSerializer(user)
 
         # Serialize and return user data
-        serializer = UserSerializer(user)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
     except ObjectDoesNotExist:

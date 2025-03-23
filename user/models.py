@@ -40,7 +40,6 @@ class User(Document):
         return f"{self.first_name} ({self.email})"
 
 class Photographer(User):
-    portfolio = ReferenceField('Header', required=False)
     verified = BooleanField(default=False)
 
     meta = {"collection": "photographers"}

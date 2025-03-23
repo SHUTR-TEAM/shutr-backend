@@ -1,8 +1,15 @@
 from bson import ObjectId
 from rest_framework import serializers
 
+from portfolio.models import Header
+# from django.utils.module_loading import import_string
+
 # from portfolio.serializers import HeaderSerializer
 from .models import User, Photographer
+
+
+# def get_header_serializer():
+#     return import_string('portfolio.serializers.HeaderSerializer')
 
 class ObjectIdField(serializers.Field):
     def to_representation(self, value):
@@ -46,11 +53,27 @@ class UserSerializer(serializers.Serializer):
 
 
 class PhotographerSerializer(UserSerializer):
-    # portfolio = HeaderSerializer()
+    portfolio = serializers.SerializerMethodField(read_only=True)
     verified = serializers.BooleanField(default=False)
 
     def create(self, validated_data):
         user = Photographer(**validated_data)
         user.set_password(validated_data["password"])
-        user.save()
-        return user
+        saved_user = user.save()
+
+        portfolio = Header.objects.create(photographer=saved_user)
+        saved_user.portfolio = portfolio
+
+        return saved_user
+    
+    def get_portfolio(self, obj):
+        from portfolio.serializers import HeaderSerializer
+        try:
+            portfolio = Header.objects.get(photographer=obj)
+            return HeaderSerializer(portfolio, context=self.context).data
+        except Header.DoesNotExist:
+            return None
+
+
+class PhotographerMinimalSerializer(UserSerializer):
+    verified = serializers.BooleanField(default=False)
