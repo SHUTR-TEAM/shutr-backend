@@ -38,10 +38,10 @@ INSTALLED_APPS = [
     'core',
     'portfolio',
     'chat',
-    'search',
     'djoser',
     'social_django',
     'user',
+    'vertex_multimodaling',
 ]
 
 MIDDLEWARE = [
@@ -218,6 +218,10 @@ SOCIAL_AUTH_FACEBOOK_SCOPE = ['email']
 SOCIAL_AUTH_FACEBOOK_PROFILE_EXTRA_PARAMS = {
     'fields': 'email, first_name, last_name'
 }
+GOOGLE_PROJECT_ID= os.getenv('GOOGLE_PROJECT_ID')
+GOOGLE_REGION= os.getenv('GOOGLE_REGION')
+VECTOR_INDEX_ID= os.getenv('VECTOR_INDEX_ID')
+DEPLOYED_INDEX_ID= os.getenv('DEPLOYED_INDEX_ID')
 
 CORS_ALLOW_CREDENTIALS = True
 CORS_ALLOWED_ORIGINS = [
