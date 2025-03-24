@@ -9,7 +9,7 @@ from django.conf.urls.static import static
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('api/', include('core.urls')),
+    # path('api/', include('core.urls')),
     path('api/',include('portfolio.urls')),
     path('api/', include('chat.urls')),
     # path('auth/', include('auth.urls')),
@@ -18,7 +18,7 @@ urlpatterns = [
     path('booking/', include('booking.urls')),
     # path('auth/', include('auth.urls')),
     path('auth/', include('user.urls')),
-    path('vertex_multimodaling/', include('vertex_multimodaling.urls')),
+    # path('vertex_multimodaling/', include('vertex_multimodaling.urls')),
 ]
 
 

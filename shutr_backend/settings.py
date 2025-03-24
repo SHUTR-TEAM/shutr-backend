@@ -42,7 +42,7 @@ INSTALLED_APPS = [
     'social_django',
     'user',
     'booking',
-    'vertex_multimodaling',
+    # 'vertex_multimodaling',
 ]
 
 MIDDLEWARE = [

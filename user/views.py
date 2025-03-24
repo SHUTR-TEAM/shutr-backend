@@ -7,6 +7,7 @@ from django.http import JsonResponse
 from django.shortcuts import render, redirect
 from django.core.exceptions import ObjectDoesNotExist
 from django.views.decorators.csrf import csrf_exempt
+from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 
 from rest_framework import  status
 from rest_framework.response import Response
@@ -14,6 +15,7 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework_simplejwt.tokens import RefreshToken, AccessToken
 
+from portfolio.models import Package
 from user.models import Photographer, User
 from user.serializers import PhotographerSerializer, UserSerializer
 
@@ -205,58 +207,113 @@ def get_user_from_token(request):
 @csrf_exempt
 @permission_classes([AllowAny])
 def user_find_all(request):
-    
-    #Extracts query parameters and saves them to variables
+    # Extract query parameters
     search = request.GET.get("q", "").strip()
     style = request.GET.get('style', "").strip()
     min_price = request.GET.get("minPrice", "").strip()
     max_price = request.GET.get("maxPrice", "").strip()
     availability = request.GET.get("availability", "").strip()
-    experienceLevel = request.GET.get("experienceLevel", "").strip()
+    experience_level = request.GET.get("experienceLevel", "").strip()
+    page = request.GET.get("page", 1)  # Default page is 1
+    limit = request.GET.get("limit", 10)  # Default limit is 10
 
-    filters = {}
-
-    #Builds a filter dictionary based on provided query parameters for searching and filtering users
+    # Start with all photographers
+    photographers = Photographer.objects.filter(is_active=True, role="photographer")
+    
+    # Filter by search terms if provided
     if search:
-        filters["$or"] = [
-            {"name": {"$regex": search, "$options": "i"}},
-            {"tags": {"$regex": search, "$options": "i"}},
-            {"location": {"$regex": search, "$options": "i"}},
-        ]
+        # Get portfolio IDs that match the search criteria
+        from portfolio.models import Header
+
+        matching_portfolios = Header.objects.filter(name__icontains=search).values_list('id', flat=True)
+        
+        # Find photographers with matching portfolios or direct info
+        photographers = photographers.filter(
+            __raw__={
+                "$or": [
+                    {"first_name": {"$regex": search, "$options": "i"}},
+                    {"last_name": {"$regex": search, "$options": "i"}},
+                    {"id": {"$in": [ObjectId(pid) for pid in matching_portfolios]}},
+                ]
+            }
+        )
     
+    # Filter by style/category (from Gallery)
     if style:
-        filters["tags"] = {"$regex": style, "$options": "i"}
-
-    if min_price and max_price:
-        filters["price"] = {"$gte": int(min_price), "$lte": int(max_price)}
-    elif min_price:
-        filters["price"] = {"$gte": int(min_price)}
-    elif max_price:
-        filters["price"] = {"$lte": int(max_price)}
-
-    if availability:
-        filters["availability"] = availability  
-
-    if experienceLevel:
-        filters["experience_level"] = {"$regex": experienceLevel, "$options": "i"}
-
-    try:
-        if filters:
-            #directly apply MongoDB's raw query filters.
-            users_queryset = User.objects(__raw__=filters)
-
-            # Return empty list when no results
-            if not users_queryset.count():
-                return Response([], status=status.HTTP_200_OK)
-        else:
-            # Return all users when no filters are applied
-            users_queryset = User.objects.all() 
-
-        serializer = UserSerializer(users_queryset, many=True)
-        return Response(serializer.data, status=status.HTTP_200_OK)
+        # Find portfolios with galleries matching the style
+        from portfolio.models import Gallery
+        matching_portfolios = Gallery.objects.filter(category__icontains=style).values_list('portfolioID', flat=True)
+        photographers = photographers.filter(
+            id__in=[ObjectId(pid) for pid in matching_portfolios]
+        )
     
+    # Price filtering
+    if min_price or max_price:
+        # Find portfolios with packages in the price range
+        price_filter = {}
+        if min_price:
+            price_filter["$gte"] = float(min_price)
+        if max_price:
+            price_filter["$lte"] = float(max_price)
+            
+        # Convert string prices to numbers for comparison
+        all_packages = Package.objects.all()
+        matching_portfolio_ids = []
+        
+        for package in all_packages:
+            try:
+                # Extract numeric value from price string
+                price_str = ''.join(c for c in package.price if c.isdigit() or c == '.')
+                price = float(price_str)
+                
+                # Check if price is in range
+                matches = True
+                if min_price and price < float(min_price):
+                    matches = False
+                if max_price and price > float(max_price):
+                    matches = False
+                    
+                if matches:
+                    matching_portfolio_ids.append(str(package.portfolio.id))
+            except (ValueError, TypeError):
+                continue
+                
+        # Get photographers with portfolios in the matching list
+        if matching_portfolio_ids:
+            matching_headers = Header.objects.filter(id__in=[ObjectId(pid) for pid in matching_portfolio_ids])
+            photographers = photographers.filter(id__in=[h.photographer.id for h in matching_headers])
+        else:
+            # No packages in the price range
+            return Response({"results": [], "total": 0, "page": int(page), "limit": int(limit)}, status=status.HTTP_200_OK)
+    
+    # Pagination logic
+    try:
+        paginator = Paginator(photographers, limit)  # Use limit for items per page
+        total = paginator.count  # Total items
+        current_page = paginator.page(page)  # Current page data
+
+        serializer = PhotographerSerializer(current_page.object_list, many=True, context={'request': request})
+        return Response({
+            "results": serializer.data,
+            "total": total,
+            "page": int(page),
+            "limit": int(limit)
+        }, status=status.HTTP_200_OK)
+
+    except EmptyPage:
+        return Response({
+            "results": [],
+            "total": 0,
+            "page": int(page),
+            "limit": int(limit)
+        }, status=status.HTTP_200_OK)
+    except PageNotAnInteger:
+        return Response({
+            "error": "Invalid page number"
+        }, status=status.HTTP_400_BAD_REQUEST)
     except Exception as e:
         return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+    
     
 # Find a user by ID
 # GET /api/users/:user_id
