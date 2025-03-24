@@ -1,28 +1,36 @@
-# from django.urls import path
-# from .views import PhotographerSignUpView, PhotographerSignInView, PhotographerLogoutView
-
-# urlpatterns = [
-#     path('signup/', PhotographerSignUpView.as_view(), name='photographer-signup'),
-#     path('signin/', PhotographerSignInView.as_view(), name='photographer-signin'),
-#     path('logout/', PhotographerLogoutView.as_view(), name='photographer-logout'),
-# ]
-from django.urls import path, re_path
+from django.urls import path
 from .views import (
-    CustomProviderAuthView,
-    CustomTokenObtainPairView,
-    CustomTokenRefreshView,
-    CustomTokenVerifyView,
-    LogoutView
+    get_user_from_token,
+    google_auth_callback,
+    google_calendar_init,
+    # list_calendar_events,
+    refresh_token,
+    user_delete_by_id,
+    user_find_all,
+    user_find_by_id,
+    user_login,
+    user_logout,
+    user_signup,
+    user_update_by_id,
+    verify_token
 )
 
 urlpatterns = [
-    re_path(
-        r'^o/(?P<provider>\S+)/$',
-        CustomProviderAuthView.as_view(),
-        name='provider-auth'
-    ),
-    path('jwt/create/', CustomTokenObtainPairView.as_view()),
-    path('jwt/refresh/', CustomTokenRefreshView.as_view()),
-    path('jwt/verify/', CustomTokenVerifyView.as_view()),
-    path('logout/', LogoutView.as_view()),
+    path("auth/signup", user_signup, name="user-signup"),
+    path("auth/signin", user_login, name="user-login"),
+    path("auth/get-user", get_user_from_token, name="get_user_from_token-signup"),
+    path("auth/jwt/refresh", refresh_token, name="jwt-refresh"),
+    path("auth/jwt/verify", verify_token, name="jwt-verify"),
+    path("auth/logout", user_logout, name="user-logout"),
+
+    # Google calendar
+    path('auth/connect-google-calendar', google_calendar_init, name='google_calendar_init'),
+    path('auth/google-auth-callback', google_auth_callback, name='google_auth_callback'),
+    # path('calendar-events', list_calendar_events, name='list_calendar_events'),
+
+    path('api/users', user_find_all),
+    # path('users/create', user_create),
+    path('api/users/<str:user_id>', user_find_by_id),
+    path('api/users/<str:user_id>/update', user_update_by_id),
+    path('api/users/<str:user_id>/delete', user_delete_by_id),
 ]

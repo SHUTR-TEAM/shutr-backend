@@ -1,72 +1,45 @@
-
-from mongoengine import Document, EmbeddedDocument, StringField, DateTimeField, ListField, URLField,  ReferenceField, FloatField, EmbeddedDocumentField
+from mongoengine import Document, StringField, DateTimeField, ListField, URLField,  ReferenceField, FloatField
 import datetime
 
-from djongo import models
-
-
 class Header(Document):
-    name = StringField(max_length=41)
-    Background_image_url = StringField(max_length=255, required=False)
-    profile_image_url = StringField(max_length=255, required=False)
-    description = StringField(max_length=1000, required=False)
-    created_at = DateTimeField(default=lambda: datetime.datetime.utcnow())  # Auto set current time
-    updated_at = DateTimeField(default=lambda: datetime.datetime.utcnow())  # Set manually on updates
-
-    #photo_collection = ReferenceField(Gallery, required=False)
-
+    name = StringField(max_length=41, default="")
+    photographer = ReferenceField('Photographer', required=True)
+    Background_image_url = StringField(max_length=255, required=False, default="")
+    profile_image_url = StringField(max_length=255, required=False, default="")
+    description = StringField(max_length=1000, required=False, default="")
+    created_at = DateTimeField(default=lambda: datetime.datetime.utcnow())
+    updated_at = DateTimeField(default=lambda: datetime.datetime.utcnow()) 
 
 
-class GalleryFormat(EmbeddedDocument):
+class Gallery(Document):
+    photographer = ReferenceField('User', required=True)
+    portfolioID = ReferenceField('Header', required=True)
     url = StringField()  # Store file path instead of external URL
     category = StringField(max_length=20)
 
-class Gallery(Document):
-    Gallery = ListField(EmbeddedDocumentField(GalleryFormat))
-
-
-
-# class GalleryFormat(EmbeddedDocument):
-#     url = URLField()
-#     catagory = StringField(max_length = 20)
-
-# class Gallery(Document):
-#     Gallery = ListField(EmbeddedDocumentField(GalleryFormat))
-       
-
-# class Gallery(Document):
-#     photo_collection = ListField(URLField())
-#     #id = ReferenceField(Header, required=False)    
-
-
-class ReviewFormat(EmbeddedDocument):
-     name =  StringField(max_length=41)
-     rating = FloatField(min_value=0.0, max_value=10.0)
-     reviewText = StringField(max_length=1000 )
-     profile_image_url = StringField(max_length=255)
-     address = StringField(max_length=35)
-
-
 
 class Review(Document):
-    reviews = ListField(EmbeddedDocumentField(ReviewFormat))
-
-
-# class Review(Document):
-#     name =  StringField(max_length=41)
-#     rating = FloatField(min_value=0.0, max_value=10.0)
-#     reviewText = StringField(max_length=1000 )
-#     profile_image_url = StringField(max_length=255)
+    user = ReferenceField('User', required=True)
+    photographer = ReferenceField('Photographer', required=True)
+    rating = FloatField(min_value=0.0, max_value=10.0)
+    reviewText = StringField(max_length=1000 )
 
 
 class Package(Document):
+    # user = ReferenceField('User', required=True) 
+    portfolio = ReferenceField('Header', required=True) 
     title = StringField(max_length=255, required=True)
     price = StringField(max_length=50, required=True)
     description = StringField(max_length=1000, required=True)
-    details = ListField(StringField(), required=True)  # List of package details
-    package_type = StringField(max_length=100, required=True)
-    created_at = DateTimeField(default=datetime.datetime.utcnow)  # Auto-set on creation
-    updated_at = DateTimeField(default=datetime.datetime.utcnow)  # Auto-set on update
+    details = ListField(StringField(), required=True)
+    created_at = DateTimeField(default=datetime.datetime.utcnow)
+    updated_at = DateTimeField(default=datetime.datetime.utcnow)
 
-    def __str__(self):
-        return self.title
+
+class SocialLinks(Document):
+    # user = ReferenceField('User', required=True) 
+    portfolio = ReferenceField('Header', required=True) 
+    facebook = URLField(required=False)
+    instagram = URLField(required=False)
+    twitter = URLField(required=False)
+    linkedin = URLField(required=False)
