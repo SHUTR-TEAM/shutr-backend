@@ -45,17 +45,17 @@ def chat_room_create(request):
 # GET /api/chat/rooms
 @api_view(['GET'])
 def chat_room_list(request):
-    participant_id = request.GET.get('participantId')  # Get the participant ID from query params
-
+    participant_id = request.GET.get('participantId')
     if participant_id:
         try:
-            participant_id = ObjectId(participant_id)  # Convert to ObjectId
+            participant_id = ObjectId(participant_id)
         except Exception:
             return Response({"error": "Invalid participantId format"}, status=status.HTTP_400_BAD_REQUEST)
-
-        chat_rooms = ChatRoom.objects(participants__in=[participant_id])  # MongoDB $in filter
+        
+        # Change this line - use exact participant match instead of __in
+        chat_rooms = ChatRoom.objects(participants=participant_id)
     else:
-        chat_rooms = ChatRoom.objects.all()  # Fetch all chat rooms if no filter
-
+        chat_rooms = ChatRoom.objects.all()
+    
     serializer = ChatRoomSerializer(chat_rooms, many=True)
     return Response(serializer.data, status=status.HTTP_200_OK)

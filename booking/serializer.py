@@ -2,7 +2,7 @@ from rest_framework import serializers
 from bson import ObjectId
 import datetime
 
-from booking.models.booking import Booking
+from booking.models.booking import Booking, Payment
 from portfolio.serializers import PackageSerializer
 
 # Custom field to handle MongoDB ObjectId serialization
@@ -67,8 +67,19 @@ class BookingSerializer(serializers.Serializer):
 
     def update(self, instance, validated_data):
         """Update and return an existing Booking instance."""
+        payment_data = validated_data.pop("payment", None) 
+
+        if payment_data:
+            if instance.payment:
+                for key, value in payment_data.items():
+                    setattr(instance.payment, key, value)
+            else:
+                instance.payment = Payment(**payment_data)
+
+        # Update other fields
         for key, value in validated_data.items():
             setattr(instance, key, value)
+
         instance.updated_at = datetime.datetime.utcnow()
         instance.save()
         return instance
