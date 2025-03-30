@@ -22,6 +22,8 @@ from user.serializers import PhotographerSerializer, UserSerializer
 from google_auth_oauthlib.flow import Flow
 from googleapiclient.discovery import build
 
+from vertex_multimodaling import generate_text_embedding
+
 
 def set_token_cookies(response, access_token, refresh_token=None):
     response.set_cookie(
@@ -327,6 +329,27 @@ def user_find_by_id(user_id):
         return Response(serializer.data, status=status.HTTP_200_OK)
     except User.DoesNotExist:
         return Response({"error": "User not found"}, status=status.HTTP_404_NOT_FOUND)
+    
+@api_view(['GET'])
+@permission_classes([AllowAny])
+def ai_photgrapher_search(request):
+    """Search photographers using AI based image retrieval"""
+    search_text= request.GET.get("q", "").strip()
+    
+    if not search_text:
+        return Response({"error": "Search cannot be emtpty"}, status=status.HTTP_400_BAD_REQUEST)
+    
+    try:
+        photographer_ids= generate_text_embedding(search_text, top_k=30)
+        
+        if not photographer_ids:
+            return Response({"message": "No photographers found for this search."}, status=status.HTTP_404_NOT_FOUND)
+        
+        user= User.objects.filter(id__in=[ObjectId(pid) for pid in photographer_ids])
+        serializer= UserSerializer(user, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+    except Exception as e:
+        return Response({"error": f"Something went wrong: {str(e)}"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 # Update a user by ID
 # POST /api/users/:user_id/update
