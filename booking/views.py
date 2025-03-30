@@ -1,6 +1,6 @@
-from datetime import datetime
-from datetime import timedelta
+from datetime import datetime, timedelta
 from bson import ObjectId
+import re
 # from httplib2 import Credentials
 from google.oauth2.credentials import Credentials
 from rest_framework import status
@@ -217,7 +217,6 @@ def booking_update_by_id(request, booking_id):
         if serializer.is_valid():
             booking = serializer.save()
 
-            # Update Google Calendar with the updated event
             try:
                 update_google_calendar_event(booking.event.date, booking.event.duration_start, booking.event.duration_end, booking.client)
                 return Response({"message": "Booking updated and Google Calendar updated"}, status=status.HTTP_200_OK)
@@ -238,7 +237,6 @@ def booking_delete_by_id(request, booking_id):
     try:
         booking = Booking.objects.get(id=ObjectId(booking_id))
         
-        # Remove the event from Google Calendar
         try:
             remove_google_calendar_event(booking.event.date, booking.event.duration_start, booking.event.duration_end)
             booking.delete()
@@ -256,9 +254,8 @@ def booking_delete_by_id(request, booking_id):
 @csrf_exempt
 @permission_classes([AllowAny]) 
 def booking_get_unavailable_dates(request):
-    # Get all bookings and extract the booked dates
     booked_dates = Booking.objects.all().values('event.date')
-    booked_dates = [booking['event.date'].date() for booking in booked_dates]  # Get just the date part
+    booked_dates = [booking['event.date'].date() for booking in booked_dates]
 
     return Response({"unavailable_dates": booked_dates}, status=status.HTTP_200_OK)
 
@@ -268,39 +265,43 @@ def booking_get_unavailable_dates(request):
 @permission_classes([AllowAny])
 def get_photographer_booking_dates(request, photographer_id, year_month):
     try:
-        try:
-            year, month = year_month.split('-')
-            year = int(year)
-            month = int(month)
-            if not (1 <= month <= 12):
-                raise ValueError("Month must be between 1 and 12")
-        except ValueError as e:
-            return Response({"error": f"Invalid year-month format. Should be YYYY-MM. {str(e)}"}, 
-                           status=status.HTTP_400_BAD_REQUEST)
-        
-        # Calculate start and end dates for the month
-        start_date = datetime.datetime(year, month, 1)
-        
-        # Determine the last day of the month
-        if month == 12:
-            end_date = datetime.datetime(year + 1, 1, 1) - datetime.timedelta(days=1)
-        else:
-            end_date = datetime.datetime(year, month + 1, 1) - datetime.timedelta(days=1)
-        
-        # Find bookings for the photographer in the given month
-        bookings = Booking.objects.filter(
-            photographer_id=photographer_id,
-            event__date__gte=start_date.strftime('%Y-%m-%d'),
-            event__date__lte=end_date.strftime('%Y-%m-%d')
-        )
-        
-        # Extract dates from bookings
-        booking_dates = [booking.event.date for booking in bookings]
-        
+        # Parse year and month
+        year, month = map(int, year_month.split('-'))
+        if not (1 <= month <= 12):
+            raise ValueError("Month must be between 1 and 12")
+
+        start_date = datetime(year, month, 1)
+
+        end_date = datetime(year, month, 1) + timedelta(days=32)  # Move to next month
+        end_date = datetime(end_date.year, end_date.month, 1) - timedelta(seconds=1)
+
+        all_bookings = Booking.objects.filter(photographer_id=photographer_id)
+
+        # Regex pattern to extract the date (ignores timezone)
+        date_pattern = r"([A-Za-z]{3} [A-Za-z]{3} \d{2} \d{4} \d{2}:\d{2}:\d{2})"
+
+        filtered_bookings = []
+        for booking in all_bookings:
+            try:
+                match = re.search(date_pattern, booking.event.date)
+                if match:
+                    date_str = match.group(1)
+                    parsed_date = datetime.strptime(date_str, "%a %b %d %Y %H:%M:%S")
+                    
+                    if start_date <= parsed_date <= end_date:
+                        filtered_bookings.append(parsed_date.strftime("%Y-%m-%d"))  # Format as YYYY-MM-DD
+                else:
+                    print(f"Skipping invalid date format: {booking.event.date}")
+
+            except ValueError:
+                print(f"Skipping invalid date format: {booking.event.date}")
+
+        print(f"Found {len(filtered_bookings)} bookings for photographer {photographer_id}")
+
         return Response({
             "photographer_id": photographer_id, 
             "year_month": year_month, 
-            "booking_dates": booking_dates
+            "booking_dates": filtered_bookings
         }, status=status.HTTP_200_OK)
     
     except Exception as e:
