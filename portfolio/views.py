@@ -1,4 +1,6 @@
 import os
+import uuid
+import boto3
 import gridfs
 
 from bson import ObjectId
@@ -84,19 +86,50 @@ def header_update_by_id(request, header_id):
 
         #  Convert uploaded images to URLs 
         if 'profile_image' in request.FILES:
-            profile_image = request.FILES['profile_image']
-            profile_image_path = f"media/profile_images/{profile_image.name}"  # Storage path
-            path = default_storage.save(profile_image_path, ContentFile(profile_image.read()))  
-            # header.profile_image_url = f"/{path}"  # Convert file path to URL
-            header.profile_image_url = request.build_absolute_uri(f"/media/{path}")
+            s3 = boto3.client(
+                "s3",
+                aws_access_key_id=settings.S3_ACCESS_KEY,
+                aws_secret_access_key=settings.S3_SECRET_KEY,
+                region_name=settings.S3_REGION,
+            )
 
+            profile_image = request.FILES['profile_image']
+            
+            # Generate a unique file name using uuid
+            file_extension = os.path.splitext(profile_image.name)[1]  # Extract file extension
+            unique_filename = f"{uuid.uuid4().hex}{file_extension}"
+            
+            profile_image_path = f"profile-images/{unique_filename}"  # Storage path
+
+            s3.upload_fileobj(profile_image, settings.S3_BUCKET, profile_image_path)
+            profile_image_url = f"{settings.S3_CUSTOM_DOMAIN}/{profile_image_path}"
+            
+            # Save the URL in the database
+            header.profile_image_url = profile_image_url
 
         if 'Background_image' in request.FILES:
+            s3 = boto3.client(
+                "s3",
+                aws_access_key_id=settings.S3_ACCESS_KEY,
+                aws_secret_access_key=settings.S3_SECRET_KEY,
+                region_name=settings.S3_REGION,
+            )
+
             Background_image = request.FILES['Background_image']
-            Background_image_path = f"media/Background_images/{Background_image.name}"
-            path = default_storage.save(Background_image_path, ContentFile(Background_image.read()))
-            # header.Background_image_url = f"/{path}"
-            header.Background_image_url = request.build_absolute_uri(f"/media/{path}")
+            
+            # Generate a unique file name using uuid
+            file_extension = os.path.splitext(Background_image.name)[1]  # Extract file extension
+            unique_filename = f"{uuid.uuid4().hex}{file_extension}"
+            
+            Background_image_path = f"background-images/{unique_filename}"  # Storage path in S3
+
+            s3.upload_fileobj(Background_image, settings.S3_BUCKET, Background_image_path)
+            
+            # Generate S3 URL
+            Background_image_url = f"{settings.S3_CUSTOM_DOMAIN}/{Background_image_path}"
+            
+            # Save the URL in the database
+            header.Background_image_url = Background_image_url
 
         header.save()
            

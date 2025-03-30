@@ -119,6 +119,16 @@ AWS_SES_REGION_ENDPOINT = f'email.{AWS_SES_REGION_NAME}.amazonaws.com'
 AWS_SES_FROM_EMAIL = os.getenv('AWS_SES_FROM_EMAIL')
 USE_SES_V2 = True
 
+
+S3_BUCKET = os.getenv('S3_BUCKET')
+S3_ACCESS_KEY = os.getenv('S3_ACCESS_KEY')
+S3_SECRET_KEY = os.getenv('S3_SECRET_KEY')
+S3_REGION = os.getenv('S3_REGION')
+S3_CUSTOM_DOMAIN = f'https://{S3_BUCKET}.s3.{S3_REGION}.amazonaws.com'
+
+DEFAULT_FILE_STORAGE = "storages.backends.s3boto3.S3Boto3Storage"
+
+
 DOMAIN= os.getenv('DOMAIN')
 SITE_NAME= 'SHUTR'
 

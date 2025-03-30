@@ -190,7 +190,7 @@ def get_user_from_token(request):
         try:
             user = Photographer.objects.get(id=user_id)
             serializer = PhotographerSerializer(user)
-        except ObjectDoesNotExist:
+        except Photographer.DoesNotExist:
             user = User.objects.get(id=user_id)
             serializer = UserSerializer(user)
 
