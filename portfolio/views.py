@@ -401,64 +401,72 @@ def review_delete_by_id(request, review_id):
 
 
 # Create a new packages
-# POST /api/packages/create
+# Endpoint: POST /api/packages/create
 @api_view(['POST'])
 @csrf_exempt
 @permission_classes([AllowAny])
 def package_create(request):
+     #Deserialize incoming data
     serializer = PackageSerializer(data=request.data)
+    # Validate the data
     if serializer.is_valid():
         package = serializer.save()
 
-        return Response({"message": "package created", "package_id": str(package.id)}, status=status.HTTP_201_CREATED)
+        return Response({"message": "package created", "package_id": str(package.id)}, status=status.HTTP_201_CREATED) # Save package to the database
+   # Return validation errors
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
-# Find all packages
-# GET /api/packages
+# Retrieve all packages with pagination
+# Endpoint: GET /api/packages
 @api_view(['GET'])
 @csrf_exempt
 @permission_classes([AllowAny])
 def package_find_all(request):
-    paginator = PaginationWithParams()
-    packages = Review.objects.all()
-    paginated_reviews = paginator.paginate_queryset(packages, request)
-    serializer = PackageSerializer(paginated_reviews, many=True)
-    return paginator.get_paginated_response(serializer.data)
+    paginator = PaginationWithParams() # Initialize pagination
+    packages = Review.objects.all() # Retrieve all packages
+    paginated_reviews = paginator.paginate_queryset(packages, request) # Apply pagination
+    serializer = PackageSerializer(paginated_reviews, many=True) # Serialize data
+    return paginator.get_paginated_response(serializer.data) # Return paginated response
 
-
+# Retrieve a package by its ID
+# Endpoint: GET /api/packages/:package_id
 @api_view(['GET'])
 @permission_classes([AllowAny])
 def package_find_by_id(request, package_id):
     try:
+        # Find package by ID
         package = Package.objects.filter(id=ObjectId(package_id)).first()
         if not package:
             return Response({"error": "Package not found"}, status=status.HTTP_404_NOT_FOUND)
 
-        serializer = PackageSerializer(package)
-        return Response(serializer.data, status=status.HTTP_200_OK)
+        serializer = PackageSerializer(package) # Serialize package data
+        return Response(serializer.data, status=status.HTTP_200_OK) # Return response
     except Exception as e:
         return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
-
+# Retrieve packages by photographer ID
+# Endpoint: GET /api/packages/photographer/:photographer_id
 @api_view(['GET'])
 @permission_classes([AllowAny])
 def package_find_by_photographerid(request, photographer_id):
     try:
+        # Find photographer by ID
         photographer = User.objects.get(id=ObjectId(photographer_id))
-        packages = Package.objects.filter(photographer=photographer)
+        packages = Package.objects.filter(photographer=photographer) # Get packages linked to photographer
 
         if not packages:
             return Response({"message": "No packages found for this photographer"}, status=status.HTTP_404_NOT_FOUND)
 
-        serializer = PackageSerializer(packages, many=True)
-        return Response(serializer.data, status=status.HTTP_200_OK)
+        serializer = PackageSerializer(packages, many=True) # Serialize package data
+        return Response(serializer.data, status=status.HTTP_200_OK) # Return response
     except User.DoesNotExist:
         return Response({"error": "Photographer not found"}, status=status.HTTP_404_NOT_FOUND)
     except Exception as e:
         return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
-
+# Retrieve packages by portfolio ID
+# Endpoint: GET /api/packages/portfolio/:portfolio_id
 @api_view(['GET'])
 @permission_classes([AllowAny])
 def package_find_by_portfolioid(request, portfolio_id):
@@ -484,7 +492,8 @@ def package_find_by_portfolioid(request, portfolio_id):
     except Exception as e:
         return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
-
+# Update an existing package
+# Endpoint: POST /api/packages/:package_id/update
 @api_view(['POST'])
 @permission_classes([AllowAny])
 def package_update(request, package_id):
@@ -507,12 +516,13 @@ def package_update(request, package_id):
 
 
 # Update a package by ID
-# POST /api/packages/:package_id/update
+# Endpoint: POST /api/packages/:package_id/update
 @api_view(['POST'])
 @csrf_exempt
 @permission_classes([AllowAny])
 def package_update_by_id(request, package_id):
     try:
+        # Retrieve package
         package = Package.objects.get(id=ObjectId(package_id))
         serializer = PackageSerializer(package, data=request.data, partial=True)
         if serializer.is_valid():
@@ -524,12 +534,13 @@ def package_update_by_id(request, package_id):
 
 
 # Delete a package by ID
-# POST /api/packages/:package_id/delete
+# Endpoint: GET /api/packages/:package_id/delete
 @api_view(['GET'])
 @csrf_exempt
 @permission_classes([AllowAny])
 def package_delete_by_id(request, package_id):
     try:
+         # Find and delete package
         package = Package.objects.get(id=ObjectId(package_id))
         package.delete()
         return Response({"message": "package deleted successfully"}, status=status.HTTP_200_OK)
